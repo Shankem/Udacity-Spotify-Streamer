@@ -14,8 +14,8 @@
             tools:src="@android:drawable/ic_menu_gallery"
             android:layout_margin="@dimen/artist_thumbnail_margins"
             android:id="@+id/layout_item_artist_imageview_thumbnail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_width="@dimen/thumbnail_size"
+            android:layout_height="@dimen/thumbnail_size"/>
         <TextView
             tools:text="Artist name"
             android:id="@+id/layout_item_artist_textview_name"

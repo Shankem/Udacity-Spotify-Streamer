@@ -9,7 +9,11 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import kaaes.spotify.webapi.android.models.Artist;
+import kaaes.spotify.webapi.android.models.Image;
 
 /**
  * Used to display an artist in a recycler view.
@@ -19,8 +23,16 @@ import java.util.List;
 public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder> {
     private List<Artist> mArtists;
 
-    public ArtistAdapter(List<Artist> artists) {
-        mArtists = artists;
+    public ArtistAdapter() {
+        mArtists = new ArrayList<Artist>();
+    }
+
+    public List<Artist> getArtists() {
+        return mArtists;
+    }
+
+    public void setArtists(List<Artist> artists) {
+        this.mArtists = artists;
     }
 
     @Override
@@ -38,8 +50,11 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Artist artist = mArtists.get(position);
-        holder.mName.setText(artist.getName());
-        Picasso.with(SpotifyStreamerApp.getApp()).load(artist.getImageURL()).into(holder.mThumbnail);
+        holder.mName.setText(artist.name);
+        List<Image> images = artist.images;
+        if (images != null && images.size() > 0) {
+            Picasso.with(SpotifyStreamerApp.getApp()).load(images.get(0).url).into(holder.mThumbnail);
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

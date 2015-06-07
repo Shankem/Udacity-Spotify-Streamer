@@ -2,11 +2,6 @@ package com.growingcoder.spotifystreamer;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-
-import java.util.ArrayList;
 
 /**
  * Displays a search field to search for artists on Spotify. It returns results in a list if there are any.
@@ -15,27 +10,21 @@ import java.util.ArrayList;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
-        setSupportActionBar(toolbar);
+        if (savedInstanceState != null) {
+            return;
+        }
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.main_recyclerview_artists);
-        mRecyclerView.setHasFixedSize(true);
+        ArtistSearchFragment artistFragment = new ArtistSearchFragment();
+        getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_container, artistFragment).commit();
 
-        mLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mAdapter = new ArtistAdapter(new ArrayList<Artist>());
-        mRecyclerView.setAdapter(mAdapter);
+        //TODO setup progressbar
 
-        //TODO move into fragment
+        //TODO cancel request if you type
     }
 }
 

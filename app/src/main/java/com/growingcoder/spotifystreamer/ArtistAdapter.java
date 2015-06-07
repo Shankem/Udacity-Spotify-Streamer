@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.List;
 
 /**
@@ -33,11 +35,11 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         return mArtists.size();
     }
 
-    // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.mName.setText(mArtists.get(position).getName());
-        //TODO picasso image load
+        Artist artist = mArtists.get(position);
+        holder.mName.setText(artist.getName());
+        Picasso.with(SpotifyStreamerApp.getApp()).load(artist.getImageURL()).into(holder.mThumbnail);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

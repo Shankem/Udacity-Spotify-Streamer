@@ -6,12 +6,13 @@
               android:orientation="vertical"
               tools:context=".MainActivity">
 
-    <android.widget.Toolbar
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/main_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary"
-        android:theme="@style/SpotifyToolbarTheme"
-        android:title="@string/app_name"/>
+        android:title="@string/app_name"
+        android:theme="@style/SpotifyToolbarTheme"/>
 
     <LinearLayout
                   android:layout_width="match_parent"
@@ -28,6 +29,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/main_search_hint"/>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/main_recyclerview_artists"
+            android:scrollbars="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
     </LinearLayout>
 
 </LinearLayout>

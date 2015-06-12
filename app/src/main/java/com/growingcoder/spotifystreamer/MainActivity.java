@@ -25,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
         //TODO setup progressbar
 
         //TODO cancel request if you type
+
+        //TODO try cards in each row?
     }
 }
 

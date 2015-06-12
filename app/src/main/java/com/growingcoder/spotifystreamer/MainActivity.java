@@ -1,14 +1,14 @@
 package com.growingcoder.spotifystreamer;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 
 /**
  * Displays a search field to search for artists on Spotify. It returns results in a list if there are any.
+ *
  * @author Pierce
  * @since 6/7/2015.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

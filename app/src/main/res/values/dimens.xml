@@ -5,4 +5,7 @@
 
     <dimen name="artist_thumbnail_margins">16dp</dimen>
     <dimen name="thumbnail_size">64dp</dimen>
+
+    <dimen name="card_margin">8dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
 </resources>

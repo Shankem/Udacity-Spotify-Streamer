@@ -29,8 +29,6 @@ public class MainActivity extends BaseActivity {
         getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_container, artistFragment).commit();
 
         //TODO setup progressbar
-
-        //TODO try cards in each row?
     }
 }
 

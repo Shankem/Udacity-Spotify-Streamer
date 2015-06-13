@@ -21,7 +21,9 @@ import kaaes.spotify.webapi.android.models.Image;
  * @since 6/7/2015.
  */
 public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder> {
+
     private List<Artist> mArtists;
+    private OnRecyclerItemClickListener mItemClickListener = null;
 
     public ArtistAdapter() {
         mArtists = new ArrayList<Artist>();
@@ -35,10 +37,14 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         this.mArtists = artists;
     }
 
+    public void setItemClickListener(OnRecyclerItemClickListener listener) {
+        mItemClickListener = listener;
+    }
+
     @Override
     public ArtistAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_item_artist, parent, false);
-        ViewHolder vh = new ViewHolder(v);
+        ViewHolder vh = new ViewHolder(v, mItemClickListener);
         return vh;
     }
 
@@ -59,14 +65,25 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
                 .into(holder.mThumbnail);
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView mName;
         public ImageView mThumbnail;
 
-        public ViewHolder(View v) {
+        private OnRecyclerItemClickListener mListener;
+
+        public ViewHolder(View v, OnRecyclerItemClickListener listener) {
             super(v);
+            mListener = listener;
             mName = (TextView) v.findViewById(R.id.layout_item_artist_textview_name);
             mThumbnail = (ImageView) v.findViewById(R.id.layout_item_artist_imageview_thumbnail);
+            v.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            if (mListener != null) {
+                mListener.onItemClick(v, getAdapterPosition());
+            }
         }
     }
 }

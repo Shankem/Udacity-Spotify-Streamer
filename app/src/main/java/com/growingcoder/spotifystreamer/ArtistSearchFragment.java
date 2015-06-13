@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.otto.Subscribe;
 
@@ -54,6 +55,13 @@ public class ArtistSearchFragment extends BaseFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mSpotifyService = new SpotifyApi().getService();
+        mAdapter = new ArtistAdapter();
+        mAdapter.setItemClickListener(new OnRecyclerItemClickListener() {
+            @Override
+            public void onItemClick(View v, int position) {
+                Toast.makeText(SpotifyStreamerApp.getApp(), "Implement me!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Nullable
@@ -66,7 +74,6 @@ public class ArtistSearchFragment extends BaseFragment {
 
         mLayoutManager = new LinearLayoutManager(SpotifyStreamerApp.getApp());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mAdapter = new ArtistAdapter();
         mRecyclerView.setAdapter(mAdapter);
 
         TextView search = (TextView) v.findViewById(R.id.fragment_artist_search_edittext_search);

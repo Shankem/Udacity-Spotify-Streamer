@@ -3,10 +3,8 @@ package com.growingcoder.spotifystreamer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -38,7 +36,6 @@ public class ArtistSearchFragment extends BaseFragment {
     private RecyclerView mRecyclerView;
     private ArtistAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    private Toolbar mToolbar;
 
     private Callback<ArtistsPager> mArtistsCallback = new Callback<ArtistsPager>() {
         @Override
@@ -64,8 +61,6 @@ public class ArtistSearchFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_artist_search, container, false);
 
-        mToolbar = (Toolbar) v.findViewById(R.id.fragment_artist_search_toolbar);
-
         mRecyclerView = (RecyclerView) v.findViewById(R.id.fragment_artist_search_recyclerview_artists);
         mRecyclerView.setHasFixedSize(true);
 
@@ -78,12 +73,6 @@ public class ArtistSearchFragment extends BaseFragment {
         search.addTextChangedListener(new SearchWatcher());
 
         return v;
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
     }
 
     private class SearchWatcher implements TextWatcher {

@@ -62,7 +62,8 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         Artist artist = mArtists.get(position);
         holder.mName.setText(artist.name);
         List<Image> images = artist.images;
-        String url = images != null && images.size() > 0 ? images.get(0).url : null;
+        int thumbnailSize = SpotifyStreamerApp.getApp().getResources().getDimensionPixelSize(R.dimen.thumbnail_size);
+        String url = Util.getImageWithSize(images, thumbnailSize);
         Picasso.with(SpotifyStreamerApp.getApp())
                 .load(url)
                 .placeholder(android.R.drawable.ic_menu_gallery)

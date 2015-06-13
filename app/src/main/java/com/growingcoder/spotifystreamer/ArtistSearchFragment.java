@@ -15,8 +15,11 @@ import android.widget.Toast;
 
 import com.squareup.otto.Subscribe;
 
+import java.util.ArrayList;
+
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -38,16 +41,34 @@ public class ArtistSearchFragment extends BaseFragment {
     private ArtistAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
+    private View mProgressBar;
+    private View mEmptyTextView;
+
+    private int mNumRequests = 0;
+
     private Callback<ArtistsPager> mArtistsCallback = new Callback<ArtistsPager>() {
         @Override
         public void success(ArtistsPager artistsPager, Response response) {
-            mAdapter.setArtists(artistsPager.artists.items);
-            postEvent(new BusManager.ArtistSearchEvent());
+            mNumRequests--;
+
+            /* If we made multiple requests we should just ignore previous ones.
+            * This is because the user only cares about the current request.
+            * Retrofit has no way of cancelling requests, this feature may come in the next version (2.0)
+            * but in the current version (1.9) it does not exist.
+            */
+            if (mNumRequests == 0) {
+                mAdapter.setArtists(artistsPager.artists.items);
+                postEvent(new BusManager.ArtistSearchEvent());
+            }
         }
 
         @Override
         public void failure(RetrofitError error) {
-            //TODO toast error
+            mNumRequests--;
+            if (mNumRequests == 0) {
+                mAdapter.setArtists(new ArrayList<Artist>());
+                postEvent(new BusManager.ArtistSearchEvent());
+            }
         }
     };
 
@@ -68,6 +89,9 @@ public class ArtistSearchFragment extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_artist_search, container, false);
+
+        mProgressBar = v.findViewById(R.id.fragment_artist_search_progressbar);
+        mEmptyTextView = v.findViewById(R.id.fragment_artist_search_textview_empty);
 
         mRecyclerView = (RecyclerView) v.findViewById(R.id.fragment_artist_search_recyclerview_artists);
         mRecyclerView.setHasFixedSize(true);
@@ -97,6 +121,7 @@ public class ArtistSearchFragment extends BaseFragment {
 
         @Override
         public void afterTextChanged(final Editable s) {
+            refreshState(true);
             mHandler.removeCallbacks(mSearchRunnable);
             mSearchRunnable.setSearchText(s.toString());
             mHandler.postDelayed(mSearchRunnable, SEARCH_DELAY);
@@ -116,12 +141,22 @@ public class ArtistSearchFragment extends BaseFragment {
 
         @Override
         public void run() {
+            mNumRequests++;
             mSpotifyService.searchArtists(mSearchText, mArtistsCallback);
         }
+    }
+
+    private void refreshState(boolean loading) {
+        int count = mAdapter.getItemCount();
+
+        mProgressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        mEmptyTextView.setVisibility(loading || count > 0 ? View.GONE : View.VISIBLE);
+        mRecyclerView.setVisibility(loading || count == 0 ? View.GONE : View.VISIBLE);
     }
 
     @Subscribe
     public void searchFinished(BusManager.ArtistSearchEvent event) {
         mAdapter.notifyDataSetChanged();
+        refreshState(false);
     }
 }

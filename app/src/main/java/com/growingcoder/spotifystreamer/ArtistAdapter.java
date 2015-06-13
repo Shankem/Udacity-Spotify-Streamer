@@ -10,6 +10,8 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.models.Artist;
@@ -24,6 +26,7 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
 
     private List<Artist> mArtists;
     private OnRecyclerItemClickListener mItemClickListener = null;
+    private ArtistComparator mArtistComparator = new ArtistComparator();
 
     public ArtistAdapter() {
         mArtists = new ArrayList<Artist>();
@@ -34,7 +37,8 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     }
 
     public void setArtists(List<Artist> artists) {
-        this.mArtists = artists;
+        mArtists = artists;
+        Collections.sort(mArtists, mArtistComparator);
     }
 
     public void setItemClickListener(OnRecyclerItemClickListener listener) {
@@ -84,6 +88,16 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
             if (mListener != null) {
                 mListener.onItemClick(v, getAdapterPosition());
             }
+        }
+    }
+
+    /**
+     * Comparator used for sorting the artists by name.
+     */
+    private class ArtistComparator implements Comparator<Artist> {
+        @Override
+        public int compare(Artist lhs, Artist rhs) {
+            return lhs.name.compareToIgnoreCase(rhs.name);
         }
     }
 }

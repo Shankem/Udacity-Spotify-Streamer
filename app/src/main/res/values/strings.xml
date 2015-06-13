@@ -2,4 +2,5 @@
     <string name="app_name">Spotify Streamer</string>
 
     <string name="main_search_hint">Artist name</string>
+    <string name="no_artists_found">No Artists Found</string>
 </resources>

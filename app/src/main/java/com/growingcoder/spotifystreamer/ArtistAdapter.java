@@ -52,9 +52,11 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         Artist artist = mArtists.get(position);
         holder.mName.setText(artist.name);
         List<Image> images = artist.images;
-        if (images != null && images.size() > 0) {
-            Picasso.with(SpotifyStreamerApp.getApp()).load(images.get(0).url).into(holder.mThumbnail);
-        }
+        String url = images != null && images.size() > 0 ? images.get(0).url : null;
+        Picasso.with(SpotifyStreamerApp.getApp())
+                .load(url)
+                .placeholder(android.R.drawable.ic_menu_gallery)
+                .into(holder.mThumbnail);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

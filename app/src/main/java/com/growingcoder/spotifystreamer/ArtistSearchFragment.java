@@ -1,6 +1,7 @@
 package com.growingcoder.spotifystreamer;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -29,6 +30,8 @@ import retrofit.client.Response;
  * @since 6/7/2015.
  */
 public class ArtistSearchFragment extends BaseFragment {
+
+    private static final long SEARCH_DELAY = 500l;
 
     private SpotifyService mSpotifyService;
 
@@ -84,6 +87,10 @@ public class ArtistSearchFragment extends BaseFragment {
     }
 
     private class SearchWatcher implements TextWatcher {
+
+        private Handler mHandler = new Handler();
+        private SearchRunnable mSearchRunnable = new SearchRunnable();
+
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }
@@ -93,8 +100,27 @@ public class ArtistSearchFragment extends BaseFragment {
         }
 
         @Override
-        public void afterTextChanged(Editable s) {
-            mSpotifyService.searchArtists(s.toString(), mArtistsCallback);
+        public void afterTextChanged(final Editable s) {
+            mHandler.removeCallbacks(mSearchRunnable);
+            mSearchRunnable.setSearchText(s.toString());
+            mHandler.postDelayed(mSearchRunnable, SEARCH_DELAY);
+        }
+    }
+
+    /**
+     * Runnable to do the search that we can delay and cancel. Otherwise we'll
+     * fire off a request for each character typed.
+     */
+    private class SearchRunnable implements Runnable {
+        private String mSearchText = "";
+
+        public void setSearchText(String text) {
+            mSearchText = text;
+        }
+
+        @Override
+        public void run() {
+            mSpotifyService.searchArtists(mSearchText, mArtistsCallback);
         }
     }
 

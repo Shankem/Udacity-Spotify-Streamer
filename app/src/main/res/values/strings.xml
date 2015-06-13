@@ -3,4 +3,6 @@
 
     <string name="main_search_hint">Artist name</string>
     <string name="no_artists_found">No Artists Found</string>
+    <string name="no_tracks_found">No Tracks Found</string>
+    <string name="top_tracks_title">Top 10 Tracks</string>
 </resources>

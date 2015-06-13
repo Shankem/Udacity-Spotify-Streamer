@@ -1,7 +1,10 @@
-package com.growingcoder.spotifystreamer;
+package com.growingcoder.spotifystreamer.search;
 
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+
+import com.growingcoder.spotifystreamer.R;
+import com.growingcoder.spotifystreamer.core.BaseActivity;
 
 /**
  * Displays a search field to search for artists on Spotify. It returns results in a list if there are any.
@@ -27,8 +30,6 @@ public class MainActivity extends BaseActivity {
 
         ArtistSearchFragment artistFragment = new ArtistSearchFragment();
         getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_container, artistFragment).commit();
-
-        //TODO setup progressbar
     }
 }
 

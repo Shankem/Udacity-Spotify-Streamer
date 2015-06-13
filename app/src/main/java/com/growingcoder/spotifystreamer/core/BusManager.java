@@ -1,4 +1,4 @@
-package com.growingcoder.spotifystreamer;
+package com.growingcoder.spotifystreamer.core;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -26,6 +26,10 @@ public final class BusManager {
     }
 
     public static class ArtistSearchEvent {
+
+    }
+
+    public static class TracksLoadedEvent {
 
     }
 

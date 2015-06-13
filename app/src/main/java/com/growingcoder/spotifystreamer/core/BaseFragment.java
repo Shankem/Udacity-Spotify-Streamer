@@ -1,21 +1,21 @@
-package com.growingcoder.spotifystreamer;
+package com.growingcoder.spotifystreamer.core;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.Fragment;
 
 /**
- * Common functionality for activities to inherit.
+ * Common functionalities for fragments to inherit.
  *
  * @author Pierce
  * @since 15-06-12.
  */
-public class BaseActivity extends AppCompatActivity implements EventBridge.LifeCycleState {
+public class BaseFragment extends Fragment implements EventBridge.LifeCycleState {
 
     private EventBridge mEventBridge;
     private boolean mAllowsUIChanges = false;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mEventBridge = new EventBridge(this);
     }

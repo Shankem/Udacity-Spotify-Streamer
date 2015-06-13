@@ -1,4 +1,4 @@
-package com.growingcoder.spotifystreamer;
+package com.growingcoder.spotifystreamer.search;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -7,6 +7,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.growingcoder.spotifystreamer.R;
+import com.growingcoder.spotifystreamer.core.OnRecyclerItemClickListener;
+import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
+import com.growingcoder.spotifystreamer.core.Util;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;

@@ -1,5 +1,6 @@
-package com.growingcoder.spotifystreamer;
+package com.growingcoder.spotifystreamer.search;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -10,9 +11,15 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.EditText;
 
+import com.growingcoder.spotifystreamer.R;
+import com.growingcoder.spotifystreamer.toptracks.TopTracksActivity;
+import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
+import com.growingcoder.spotifystreamer.core.BaseFragment;
+import com.growingcoder.spotifystreamer.core.BusManager;
+import com.growingcoder.spotifystreamer.core.OnRecyclerItemClickListener;
+import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
@@ -80,7 +87,11 @@ public class ArtistSearchFragment extends BaseFragment {
         mAdapter.setItemClickListener(new OnRecyclerItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {
-                Toast.makeText(SpotifyStreamerApp.getApp(), "Implement me!", Toast.LENGTH_SHORT).show();
+                Artist artist = mAdapter.getArtists().get(position);
+                Intent intent = new Intent(getActivity(), TopTracksActivity.class);
+                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_ID, artist.id);
+                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, artist.name);
+                startActivity(intent);
             }
         });
     }
@@ -100,7 +111,7 @@ public class ArtistSearchFragment extends BaseFragment {
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
 
-        TextView search = (TextView) v.findViewById(R.id.fragment_artist_search_edittext_search);
+        EditText search = (EditText) v.findViewById(R.id.fragment_artist_search_edittext_search);
         search.addTextChangedListener(new SearchWatcher());
 
         return v;

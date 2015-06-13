@@ -1,4 +1,4 @@
-package com.growingcoder.spotifystreamer;
+package com.growingcoder.spotifystreamer.core;
 
 import android.view.View;
 

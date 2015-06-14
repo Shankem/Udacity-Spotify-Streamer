@@ -87,6 +87,7 @@ public class ArtistSearchFragment extends BaseFragment {
         public void failure(RetrofitError error) {
             mNumRequests--;
             if (mNumRequests == 0 && mIsSearching) {
+                mIsSearching = false;
                 mAdapter.setArtists(new ArrayList<SpotifyArtist>());
                 postEvent(new BusManager.ArtistSearchEvent());
             }
@@ -147,17 +148,26 @@ public class ArtistSearchFragment extends BaseFragment {
         @Override
         public void afterTextChanged(final Editable s) {
             mLastSearch = s.toString();
-            List<JSONObject> artists = Util.getCachedData(SpotifyArtist.class.getName() + "-" + mLastSearch);
-            if (artists == null) {
-                mIsSearching = true;
-                refreshState(true);
-                mHandler.removeCallbacks(mSearchRunnable);
-                mSearchRunnable.setSearchText(mLastSearch);
-                mHandler.postDelayed(mSearchRunnable, SEARCH_DELAY);
-            } else {
+            if ("".equals(mLastSearch)) {
                 mIsSearching = false;
-                mAdapter.setJSONArtists(artists);
+                mAdapter.setArtists(new ArrayList<SpotifyArtist>());
                 postEvent(new BusManager.ArtistSearchEvent());
+            } else {
+                List<JSONObject> artists = Util.getCachedData(SpotifyArtist.class.getName() + "-" + mLastSearch);
+                if (artists == null) {
+                    mIsSearching = true;
+                    refreshState(true);
+
+                    mHandler.removeCallbacks(mSearchRunnable);
+                    mNumRequests += mSearchRunnable.isRunning() ? 0 : 1;
+                    mSearchRunnable.setIsRunning(true);
+                    mSearchRunnable.setSearchText(mLastSearch);
+                    mHandler.postDelayed(mSearchRunnable, SEARCH_DELAY);
+                } else {
+                    mIsSearching = false;
+                    mAdapter.setJSONArtists(artists);
+                    postEvent(new BusManager.ArtistSearchEvent());
+                }
             }
         }
     }
@@ -168,6 +178,7 @@ public class ArtistSearchFragment extends BaseFragment {
      */
     private class SearchRunnable implements Runnable {
         private String mSearchText = "";
+        private boolean mIsRunning = false;
 
         public void setSearchText(String text) {
             mSearchText = text;
@@ -175,8 +186,16 @@ public class ArtistSearchFragment extends BaseFragment {
 
         @Override
         public void run() {
-            mNumRequests++;
+            mIsRunning = false;
             mSpotifyService.searchArtists(mSearchText, mArtistsCallback);
+        }
+
+        public void setIsRunning(boolean isRunning) {
+            mIsRunning = isRunning;
+        }
+
+        public boolean isRunning() {
+            return mIsRunning;
         }
     }
 

@@ -49,9 +49,9 @@ public final class Util {
     /**
      * Used to store data in shared preferences as JSON.
      */
-    public static void cacheData(String key, List<JSONObject> data) {
+    public static void cacheData(String key, List<? extends SpotifyJSONObject> data) {
         JSONArray array = new JSONArray();
-        for (JSONObject jsonObject : data) {
+        for (SpotifyJSONObject jsonObject : data) {
             array.put(jsonObject);
         }
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
@@ -61,12 +61,13 @@ public final class Util {
     /**
      * Used to retrieve data from shared preferences stored as JSON.
      */
-    public static List<? extends JSONObject> getCachedData(String key) {
-        List<JSONObject> results = new ArrayList<JSONObject>();
+    public static List<JSONObject> getCachedData(String key) {
+        List<JSONObject> results = null;
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
         String data = preferences.getString(key, null);
 
         if (data != null) {
+            results = new ArrayList<JSONObject>();
             try {
                 JSONArray array = new JSONArray(data);
                 for (int i = 0; i < array.length(); i++) {

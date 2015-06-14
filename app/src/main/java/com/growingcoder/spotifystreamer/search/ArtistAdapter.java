@@ -12,6 +12,8 @@ import com.growingcoder.spotifystreamer.core.OnRecyclerItemClickListener;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -39,6 +41,14 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     public void setArtists(List<SpotifyArtist> artists) {
         mArtists = artists;
         Collections.sort(mArtists, mArtistComparator);
+    }
+
+    public void setJSONArtists(List<JSONObject> jsonArtists) {
+        List<SpotifyArtist> artists = new ArrayList<SpotifyArtist>();
+        for (JSONObject jsonArtist : jsonArtists) {
+            artists.add(new SpotifyArtist(jsonArtist));
+        }
+        setArtists(artists);
     }
 
     public void setItemClickListener(OnRecyclerItemClickListener listener) {

@@ -5,6 +5,9 @@ import com.growingcoder.spotifystreamer.core.SpotifyJSONObject;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.growingcoder.spotifystreamer.core.Util;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 
 import kaaes.spotify.webapi.android.models.Image;
@@ -31,6 +34,25 @@ public class SpotifyTrack extends SpotifyJSONObject{
         setName(track.name);
         setAlbumName(track.album.name);
         setId(track.id);
+    }
+
+    public SpotifyTrack(JSONObject track) {
+        try {
+            setThumbnailUrl(track.getString(KEY_THUMBNAIL));
+        } catch (JSONException e) {
+        }
+        try {
+            setName(track.getString(KEY_NAME));
+        } catch (JSONException e) {
+        }
+        try {
+            setAlbumName(track.getString(KEY_ALBUM_NAME));
+        } catch (JSONException e) {
+        }
+        try {
+            setId(track.getString(KEY_ID));
+        } catch (JSONException e) {
+        }
     }
 
     public String getThumbnailUrl() {

@@ -15,7 +15,10 @@ import com.growingcoder.spotifystreamer.core.BaseFragment;
 import com.growingcoder.spotifystreamer.core.BusManager;
 import com.growingcoder.spotifystreamer.core.OnRecyclerItemClickListener;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
+import com.growingcoder.spotifystreamer.core.Util;
 import com.squareup.otto.Subscribe;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +64,7 @@ public class TopTracksFragment extends BaseFragment {
             for (Track track : tracks.tracks) {
                 tracksList.add(new SpotifyTrack(track));
             }
+            Util.cacheData(SpotifyTrack.class.getName() + "-" + mArtistId, tracksList);
             mAdapter.setTracks(tracksList);
             postEvent(new BusManager.TracksLoadedEvent());
         }
@@ -114,14 +118,20 @@ public class TopTracksFragment extends BaseFragment {
     }
 
     public void setArtist(String id) {
-        //TODO check if this is in the cache and just load from there
         mArtistId = id;
-        refreshState(true);
+        List<JSONObject> tracks = Util.getCachedData(SpotifyTrack.class.getName() + "-" + mArtistId);
 
-        String locale = getResources().getConfiguration().locale.getCountry();
-        Map<String, Object> queryMap = new HashMap<String, Object>();
-        queryMap.put(QUERY_KEY_COUNTRY, locale);
-        mSpotifyService.getArtistTopTrack(mArtistId, queryMap, mTracksCallback);
+        if (tracks == null) {
+            refreshState(true);
+
+            String locale = getResources().getConfiguration().locale.getCountry();
+            Map<String, Object> queryMap = new HashMap<String, Object>();
+            queryMap.put(QUERY_KEY_COUNTRY, locale);
+            mSpotifyService.getArtistTopTrack(mArtistId, queryMap, mTracksCallback);
+        } else {
+            mAdapter.setJSONTracks(tracks);
+            postEvent(new BusManager.TracksLoadedEvent());
+        }
     }
 
     private void refreshState(boolean loading) {

@@ -18,9 +18,12 @@ import com.growingcoder.spotifystreamer.core.BaseFragment;
 import com.growingcoder.spotifystreamer.core.BusManager;
 import com.growingcoder.spotifystreamer.core.OnRecyclerItemClickListener;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
+import com.growingcoder.spotifystreamer.core.Util;
 import com.growingcoder.spotifystreamer.toptracks.TopTracksActivity;
 import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
 import com.squareup.otto.Subscribe;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +56,10 @@ public class ArtistSearchFragment extends BaseFragment {
     private View mEmptyTextView;
 
     private int mNumRequests = 0;
+    private String mLastSearch = "";
+
+    // If we were searching and then found a cached result, we should ignore any results that come in after
+    private boolean mIsSearching = false;
 
     private Callback<ArtistsPager> mArtistsCallback = new Callback<ArtistsPager>() {
         @Override
@@ -64,11 +71,13 @@ public class ArtistSearchFragment extends BaseFragment {
             * Retrofit has no way of cancelling requests, this feature may come in the next version (2.0)
             * but in the current version (1.9) it does not exist.
             */
-            if (mNumRequests == 0) {
+            if (mNumRequests == 0 && mIsSearching) {
+                mIsSearching = false;
                 List<SpotifyArtist> artists = new ArrayList<SpotifyArtist>();
                 for (Artist artist : artistsPager.artists.items) {
                     artists.add(new SpotifyArtist(artist));
                 }
+                Util.cacheData(SpotifyArtist.class.getName() + "-" + mLastSearch, artists);
                 mAdapter.setArtists(artists);
                 postEvent(new BusManager.ArtistSearchEvent());
             }
@@ -77,7 +86,7 @@ public class ArtistSearchFragment extends BaseFragment {
         @Override
         public void failure(RetrofitError error) {
             mNumRequests--;
-            if (mNumRequests == 0) {
+            if (mNumRequests == 0 && mIsSearching) {
                 mAdapter.setArtists(new ArrayList<SpotifyArtist>());
                 postEvent(new BusManager.ArtistSearchEvent());
             }
@@ -137,11 +146,19 @@ public class ArtistSearchFragment extends BaseFragment {
 
         @Override
         public void afterTextChanged(final Editable s) {
-            //TODO check cache to see if we already looked up this value
-            refreshState(true);
-            mHandler.removeCallbacks(mSearchRunnable);
-            mSearchRunnable.setSearchText(s.toString());
-            mHandler.postDelayed(mSearchRunnable, SEARCH_DELAY);
+            mLastSearch = s.toString();
+            List<JSONObject> artists = Util.getCachedData(SpotifyArtist.class.getName() + "-" + mLastSearch);
+            if (artists == null) {
+                mIsSearching = true;
+                refreshState(true);
+                mHandler.removeCallbacks(mSearchRunnable);
+                mSearchRunnable.setSearchText(mLastSearch);
+                mHandler.postDelayed(mSearchRunnable, SEARCH_DELAY);
+            } else {
+                mIsSearching = false;
+                mAdapter.setJSONArtists(artists);
+                postEvent(new BusManager.ArtistSearchEvent());
+            }
         }
     }
 

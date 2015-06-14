@@ -5,6 +5,9 @@ import com.growingcoder.spotifystreamer.core.SpotifyJSONObject;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.growingcoder.spotifystreamer.core.Util;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 
 import kaaes.spotify.webapi.android.models.Artist;
@@ -29,6 +32,21 @@ public class SpotifyArtist extends SpotifyJSONObject{
         setThumbnailUrl(url);
         setName(artist.name);
         setId(artist.id);
+    }
+
+    public SpotifyArtist(JSONObject artist) {
+        try {
+            setThumbnailUrl(artist.getString(KEY_THUMBNAIL));
+        } catch (JSONException e) {
+        }
+        try {
+            setName(artist.getString(KEY_NAME));
+        } catch (JSONException e) {
+        }
+        try {
+            setId(artist.getString(KEY_ID));
+        } catch (JSONException e) {
+        }
     }
 
     public String getThumbnailUrl() {

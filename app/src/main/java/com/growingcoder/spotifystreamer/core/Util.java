@@ -1,5 +1,14 @@
 package com.growingcoder.spotifystreamer.core;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.models.Image;
@@ -35,5 +44,39 @@ public final class Util {
             }
         }
         return url;
+    }
+
+    /**
+     * Used to store data in shared preferences as JSON.
+     */
+    public static void cacheData(String key, List<JSONObject> data) {
+        JSONArray array = new JSONArray();
+        for (JSONObject jsonObject : data) {
+            array.put(jsonObject);
+        }
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
+        preferences.edit().putString(key, array.toString()).apply();
+    }
+
+    /**
+     * Used to retrieve data from shared preferences stored as JSON.
+     */
+    public static List<? extends JSONObject> getCachedData(String key) {
+        List<JSONObject> results = new ArrayList<JSONObject>();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
+        String data = preferences.getString(key, null);
+
+        if (data != null) {
+            try {
+                JSONArray array = new JSONArray(data);
+                for (int i = 0; i < array.length(); i++) {
+                    results.add(array.getJSONObject(i));
+                }
+            } catch (JSONException e) {
+                Log.w(Util.class.getName(), "Error getting cached data", e);
+            }
+        }
+
+        return results;
     }
 }

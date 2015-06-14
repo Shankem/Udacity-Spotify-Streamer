@@ -10,16 +10,12 @@ import android.widget.TextView;
 import com.growingcoder.spotifystreamer.R;
 import com.growingcoder.spotifystreamer.core.OnRecyclerItemClickListener;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
-import com.growingcoder.spotifystreamer.core.Util;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.Image; 
 
 /**
  * Used to display an artist in a recycler view.
@@ -28,19 +24,19 @@ import kaaes.spotify.webapi.android.models.Image;
  */
 public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder> {
 
-    private List<Artist> mArtists;
+    private List<SpotifyArtist> mArtists;
     private OnRecyclerItemClickListener mItemClickListener = null;
     private ArtistComparator mArtistComparator = new ArtistComparator();
 
     public ArtistAdapter() {
-        mArtists = new ArrayList<Artist>();
+        mArtists = new ArrayList<SpotifyArtist>();
     }
 
-    public List<Artist> getArtists() {
+    public List<SpotifyArtist> getArtists() {
         return mArtists;
     }
 
-    public void setArtists(List<Artist> artists) {
+    public void setArtists(List<SpotifyArtist> artists) {
         mArtists = artists;
         Collections.sort(mArtists, mArtistComparator);
     }
@@ -63,13 +59,10 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Artist artist = mArtists.get(position);
-        holder.mName.setText(artist.name);
-        List<Image> images = artist.images;
-        int thumbnailSize = SpotifyStreamerApp.getApp().getResources().getDimensionPixelSize(R.dimen.thumbnail_size);
-        String url = Util.getImageWithSize(images, thumbnailSize);
+        SpotifyArtist artist = mArtists.get(position);
+        holder.mName.setText(artist.getName());
         Picasso.with(SpotifyStreamerApp.getApp())
-                .load(url)
+                .load(artist.getThumbnailUrl())
                 .placeholder(android.R.drawable.ic_menu_gallery)
                 .into(holder.mThumbnail);
     }
@@ -99,10 +92,10 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     /**
      * Comparator used for sorting the artists by name.
      */
-    private class ArtistComparator implements Comparator<Artist> {
+    private class ArtistComparator implements Comparator<SpotifyArtist> {
         @Override
-        public int compare(Artist lhs, Artist rhs) {
-            return lhs.name.compareToIgnoreCase(rhs.name);
+        public int compare(SpotifyArtist lhs, SpotifyArtist rhs) {
+            return lhs.getName().compareToIgnoreCase(rhs.getName());
         }
     }
 }

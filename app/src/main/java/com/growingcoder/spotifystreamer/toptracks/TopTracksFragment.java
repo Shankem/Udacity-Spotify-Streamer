@@ -19,6 +19,7 @@ import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
@@ -56,13 +57,17 @@ public class TopTracksFragment extends BaseFragment {
     private Callback<Tracks> mTracksCallback = new Callback<Tracks>() {
         @Override
         public void success(Tracks tracks, Response response) {
-            mAdapter.setTracks(tracks.tracks);
+            List<SpotifyTrack> tracksList = new ArrayList<SpotifyTrack>();
+            for (Track track : tracks.tracks) {
+                tracksList.add(new SpotifyTrack(track));
+            }
+            mAdapter.setTracks(tracksList);
             postEvent(new BusManager.TracksLoadedEvent());
         }
 
         @Override
         public void failure(RetrofitError error) {
-            mAdapter.setTracks(new ArrayList<Track>());
+            mAdapter.setTracks(new ArrayList<SpotifyTrack>());
             postEvent(new BusManager.TracksLoadedEvent());
         }
     };
@@ -109,6 +114,7 @@ public class TopTracksFragment extends BaseFragment {
     }
 
     public void setArtist(String id) {
+        //TODO check if this is in the cache and just load from there
         mArtistId = id;
         refreshState(true);
 

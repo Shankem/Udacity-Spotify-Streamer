@@ -14,15 +14,16 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.growingcoder.spotifystreamer.R;
-import com.growingcoder.spotifystreamer.toptracks.TopTracksActivity;
-import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
 import com.growingcoder.spotifystreamer.core.BaseFragment;
 import com.growingcoder.spotifystreamer.core.BusManager;
 import com.growingcoder.spotifystreamer.core.OnRecyclerItemClickListener;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
+import com.growingcoder.spotifystreamer.toptracks.TopTracksActivity;
+import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -64,7 +65,11 @@ public class ArtistSearchFragment extends BaseFragment {
             * but in the current version (1.9) it does not exist.
             */
             if (mNumRequests == 0) {
-                mAdapter.setArtists(artistsPager.artists.items);
+                List<SpotifyArtist> artists = new ArrayList<SpotifyArtist>();
+                for (Artist artist : artistsPager.artists.items) {
+                    artists.add(new SpotifyArtist(artist));
+                }
+                mAdapter.setArtists(artists);
                 postEvent(new BusManager.ArtistSearchEvent());
             }
         }
@@ -73,7 +78,7 @@ public class ArtistSearchFragment extends BaseFragment {
         public void failure(RetrofitError error) {
             mNumRequests--;
             if (mNumRequests == 0) {
-                mAdapter.setArtists(new ArrayList<Artist>());
+                mAdapter.setArtists(new ArrayList<SpotifyArtist>());
                 postEvent(new BusManager.ArtistSearchEvent());
             }
         }
@@ -87,10 +92,10 @@ public class ArtistSearchFragment extends BaseFragment {
         mAdapter.setItemClickListener(new OnRecyclerItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {
-                Artist artist = mAdapter.getArtists().get(position);
+                SpotifyArtist artist = mAdapter.getArtists().get(position);
                 Intent intent = new Intent(getActivity(), TopTracksActivity.class);
-                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_ID, artist.id);
-                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, artist.name);
+                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_ID, artist.getId());
+                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, artist.getName());
                 startActivity(intent);
             }
         });
@@ -132,6 +137,7 @@ public class ArtistSearchFragment extends BaseFragment {
 
         @Override
         public void afterTextChanged(final Editable s) {
+            //TODO check cache to see if we already looked up this value
             refreshState(true);
             mHandler.removeCallbacks(mSearchRunnable);
             mSearchRunnable.setSearchText(s.toString());

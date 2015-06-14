@@ -10,16 +10,12 @@ import android.widget.TextView;
 import com.growingcoder.spotifystreamer.R;
 import com.growingcoder.spotifystreamer.core.OnRecyclerItemClickListener;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
-import com.growingcoder.spotifystreamer.core.Util;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import kaaes.spotify.webapi.android.models.Image;
-import kaaes.spotify.webapi.android.models.Track;
 
 /**
  * Used to display a track in a recycler view.
@@ -28,15 +24,15 @@ import kaaes.spotify.webapi.android.models.Track;
  */
 public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.ViewHolder> {
 
-    private List<Track> mTracks;
+    private List<SpotifyTrack> mTracks;
     private OnRecyclerItemClickListener mItemClickListener = null;
     private TrackComparator mTrackComparator = new TrackComparator();
 
     public TrackAdapter() {
-        mTracks = new ArrayList<Track>();
+        mTracks = new ArrayList<SpotifyTrack>();
     }
 
-    public void setTracks(List<Track> tracks) {
+    public void setTracks(List<SpotifyTrack> tracks) {
         mTracks = tracks;
         Collections.sort(mTracks, mTrackComparator);
     }
@@ -59,14 +55,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Track track = mTracks.get(position);
-        holder.mName.setText(track.name);
-        holder.mAlbum.setText(track.album.name);
-        List<Image> images = track.album.images;
-        int thumbnailSize = SpotifyStreamerApp.getApp().getResources().getDimensionPixelSize(R.dimen.thumbnail_size);
-        String url = Util.getImageWithSize(images, thumbnailSize);
+        SpotifyTrack track = mTracks.get(position);
+        holder.mName.setText(track.getName());
+        holder.mAlbum.setText(track.getAlbumName());
         Picasso.with(SpotifyStreamerApp.getApp())
-                .load(url)
+                .load(track.getThumbnailUrl())
                 .placeholder(android.R.drawable.ic_menu_gallery)
                 .into(holder.mThumbnail);
     }
@@ -98,10 +91,10 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.ViewHolder> 
     /**
      * Comparator used for sorting the tracks by name.
      */
-    private class TrackComparator implements Comparator<Track> {
+    private class TrackComparator implements Comparator<SpotifyTrack> {
         @Override
-        public int compare(Track lhs, Track rhs) {
-            return lhs.name.compareToIgnoreCase(rhs.name);
+        public int compare(SpotifyTrack lhs, SpotifyTrack rhs) {
+            return lhs.getName().compareToIgnoreCase(rhs.getName());
         }
     }
 }

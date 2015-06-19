@@ -5,6 +5,7 @@ import android.support.v7.widget.Toolbar;
 
 import com.growingcoder.spotifystreamer.R;
 import com.growingcoder.spotifystreamer.core.BaseActivity;
+import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
 
 /**
  * Displays a search field to search for artists on Spotify. It returns results in a list if there are any.
@@ -30,6 +31,19 @@ public class MainActivity extends BaseActivity {
 
         ArtistSearchFragment artistFragment = new ArtistSearchFragment();
         getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_container, artistFragment).commit();
+
+        // If we're running on tablet then show the detail fragment here
+        if (findViewById(R.id.main_fragment_detail_container) != null) {
+            TopTracksFragment topTracksFragment = new TopTracksFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_detail_container, topTracksFragment).commit();
+            artistFragment.setTopTracksFragment(topTracksFragment);
+        }
+
+        //TODO need to set the toolbar subtitle dynamically for the top tracks and then back to blank
+
+        //TODO selected state for list item if we're in a tablet (might be able to do in layout?)
+
+        //TODO clear out the top tracks fragment if we type any text (maybe just set it to hidden)
     }
 }
 

@@ -47,6 +47,7 @@ public class ArtistSearchFragment extends BaseFragment {
     private static final long SEARCH_DELAY = 500l;
 
     private SpotifyService mSpotifyService;
+    private TopTracksFragment mTopTracksFragment = null;
 
     private RecyclerView mRecyclerView;
     private ArtistAdapter mAdapter;
@@ -99,16 +100,7 @@ public class ArtistSearchFragment extends BaseFragment {
         super.onCreate(savedInstanceState);
         mSpotifyService = new SpotifyApi().getService();
         mAdapter = new ArtistAdapter();
-        mAdapter.setItemClickListener(new OnRecyclerItemClickListener() {
-            @Override
-            public void onItemClick(View v, int position) {
-                SpotifyArtist artist = mAdapter.getArtists().get(position);
-                Intent intent = new Intent(getActivity(), TopTracksActivity.class);
-                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_ID, artist.getId());
-                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, artist.getName());
-                startActivity(intent);
-            }
-        });
+        mAdapter.setItemClickListener(new ArtistClickListener());
     }
 
     @Nullable
@@ -130,6 +122,10 @@ public class ArtistSearchFragment extends BaseFragment {
         search.addTextChangedListener(new SearchWatcher());
 
         return v;
+    }
+
+    public void setTopTracksFragment(TopTracksFragment fragment) {
+        mTopTracksFragment = fragment;
     }
 
     private class SearchWatcher implements TextWatcher {
@@ -168,6 +164,22 @@ public class ArtistSearchFragment extends BaseFragment {
                     mAdapter.setJSONArtists(artists);
                     postEvent(new BusManager.ArtistSearchEvent());
                 }
+            }
+        }
+    }
+
+    private class ArtistClickListener implements OnRecyclerItemClickListener {
+        @Override
+        public void onItemClick(View v, int position) {
+            SpotifyArtist artist = mAdapter.getArtists().get(position);
+
+            if (mTopTracksFragment == null) {
+                Intent intent = new Intent(getActivity(), TopTracksActivity.class);
+                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_ID, artist.getId());
+                intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, artist.getName());
+                startActivity(intent);
+            } else {
+                mTopTracksFragment.setArtist(artist.getId());
             }
         }
     }

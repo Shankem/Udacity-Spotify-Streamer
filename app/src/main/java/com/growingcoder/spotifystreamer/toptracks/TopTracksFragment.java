@@ -79,6 +79,7 @@ public class TopTracksFragment extends BaseFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
         mSpotifyService = new SpotifyApi().getService();
         mAdapter = new TrackAdapter();
         mAdapter.setItemClickListener(new OnRecyclerItemClickListener() {
@@ -115,12 +116,6 @@ public class TopTracksFragment extends BaseFragment {
         if (args != null) {
             setArtist(args.getString(KEY_BUNDLE_ARTIST_ID));
         }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        //TODO save the list of data
     }
 
     public void setArtist(String id) {

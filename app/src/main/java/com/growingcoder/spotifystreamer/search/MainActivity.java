@@ -15,6 +15,8 @@ import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
  */
 public class MainActivity extends BaseActivity {
 
+    private static final String STATE_SUBTITLE = "STATE_SUBTITLE ";
+
     private Toolbar mToolbar;
 
     @Override
@@ -26,28 +28,45 @@ public class MainActivity extends BaseActivity {
         setSupportActionBar(mToolbar);
 
         if (savedInstanceState != null) {
+            TopTracksFragment topTracksFragment = (TopTracksFragment) getSupportFragmentManager()
+                    .findFragmentByTag(TopTracksFragment.class.getName());
+            if (topTracksFragment != null) {
+                ArtistSearchFragment artistFragment = (ArtistSearchFragment) getSupportFragmentManager()
+                        .findFragmentByTag(ArtistSearchFragment.class.getName());
+                artistFragment.setTopTracksFragment(topTracksFragment);
+            }
+
+            if(getSupportActionBar() != null) {
+                getSupportActionBar().setSubtitle(savedInstanceState.getString(STATE_SUBTITLE));
+            }
             return;
         }
 
         ArtistSearchFragment artistFragment = new ArtistSearchFragment();
-        getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_container, artistFragment).commit();
+        getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_container, artistFragment,
+                ArtistSearchFragment.class.getName()).commit();
 
         // If we're running on tablet then show the detail fragment here
         if (findViewById(R.id.main_fragment_detail_container) != null) {
             TopTracksFragment topTracksFragment = new TopTracksFragment();
-            getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_detail_container, topTracksFragment).commit();
+            getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_detail_container, topTracksFragment,
+                    TopTracksFragment.class.getName()).commit();
             artistFragment.setTopTracksFragment(topTracksFragment);
         }
 
-        //TODO need to set the toolbar subtitle dynamically for the top tracks and then back to blank
+        //TODO make player dialog fragment with autoplay toggle
+    }
 
-        //TODO selected state for list item if we're in a tablet (might be able to do in layout?)
-        // Make it saved in the saved instance state, also change the list data to be parcelable
-        // and make it so that the text watcher does nothing when restoring state
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
 
-        //TODO need to scroll back to the selection on rotation
-
-        //TODO clear out the top tracks fragment if we type any text (maybe just set it to hidden)
+        if (getSupportActionBar() != null) {
+            CharSequence subtitle = getSupportActionBar().getSubtitle();
+            if (subtitle != null) {
+                outState.putString(STATE_SUBTITLE, subtitle.toString());
+            }
+        }
     }
 }
 

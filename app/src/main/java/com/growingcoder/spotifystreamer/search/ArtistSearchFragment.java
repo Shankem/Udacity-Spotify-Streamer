@@ -46,12 +46,16 @@ public class ArtistSearchFragment extends BaseFragment {
 
     private static final long SEARCH_DELAY = 500l;
 
+    private static final String STATE_VISIBLE_POSITION = "STATE_VISIBLE_POSITION";
+    private static final String STATE_SELECTED_POSITION = "STATE_SELECTED_POSITION";
+    private static final String STATE_DATA = "STATE_DATA";
+
     private SpotifyService mSpotifyService;
     private TopTracksFragment mTopTracksFragment = null;
 
     private RecyclerView mRecyclerView;
     private ArtistAdapter mAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
+    private LinearLayoutManager mLayoutManager;
 
     private View mProgressBar;
     private View mEmptyTextView;
@@ -98,6 +102,7 @@ public class ArtistSearchFragment extends BaseFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
         mSpotifyService = new SpotifyApi().getService();
         mAdapter = new ArtistAdapter();
         mAdapter.setItemClickListener(new ArtistClickListener());
@@ -128,12 +133,6 @@ public class ArtistSearchFragment extends BaseFragment {
         return v;
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        //TODO save the list of data and the selected index
-    }
-
     public void setTopTracksFragment(TopTracksFragment fragment) {
         mTopTracksFragment = fragment;
     }
@@ -156,6 +155,7 @@ public class ArtistSearchFragment extends BaseFragment {
             if (mTopTracksFragment != null && !s.toString().equals(mLastSearch) && mTopTracksFragment.getView() != null) {
                 mTopTracksFragment.getView().setVisibility(View.INVISIBLE);
                 mAdapter.setSelectedPosition(-1);
+                updateSubtitle(null);
             }
 
             mLastSearch = s.toString();
@@ -194,12 +194,19 @@ public class ArtistSearchFragment extends BaseFragment {
                 intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, artist.getName());
                 startActivity(intent);
             } else {
-                //TODO set selection state
                 mTopTracksFragment.setArtist(artist.getId());
                 if (mTopTracksFragment.getView() != null) {
                     mTopTracksFragment.getView().setVisibility(View.VISIBLE);
                 }
+                updateSubtitle(artist.getName());
             }
+        }
+    }
+
+    private void updateSubtitle(String subtitle) {
+        MainActivity activity = (MainActivity) getActivity();
+        if (activity != null && activity.getSupportActionBar() != null) {
+            activity.getSupportActionBar().setSubtitle(subtitle);
         }
     }
 

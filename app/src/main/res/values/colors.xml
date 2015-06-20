@@ -7,4 +7,5 @@
 
     <color name="divider">#1F000000</color>
     <color name="card">#EFFAFF</color>
+    <color name="cardHighlight">#C8E6C9</color>
 </resources>

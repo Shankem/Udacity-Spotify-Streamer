@@ -28,6 +28,10 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/thumbnail_margins"
+            android:layout_marginRight="@dimen/thumbnail_margins"
+            android:layout_marginTop="@dimen/thumbnail_margins"
+            android:layout_marginBottom="@dimen/thumbnail_margins"
             android:orientation="vertical">
 
             <TextView

@@ -101,6 +101,10 @@ public class ArtistSearchFragment extends BaseFragment {
         mSpotifyService = new SpotifyApi().getService();
         mAdapter = new ArtistAdapter();
         mAdapter.setItemClickListener(new ArtistClickListener());
+
+        if (mTopTracksFragment != null) {
+            mAdapter.setSelectable(true);
+        }
     }
 
     @Nullable
@@ -124,6 +128,12 @@ public class ArtistSearchFragment extends BaseFragment {
         return v;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //TODO save the list of data and the selected index
+    }
+
     public void setTopTracksFragment(TopTracksFragment fragment) {
         mTopTracksFragment = fragment;
     }
@@ -143,6 +153,11 @@ public class ArtistSearchFragment extends BaseFragment {
 
         @Override
         public void afterTextChanged(final Editable s) {
+            if (mTopTracksFragment != null && !s.toString().equals(mLastSearch) && mTopTracksFragment.getView() != null) {
+                mTopTracksFragment.getView().setVisibility(View.INVISIBLE);
+                mAdapter.setSelectedPosition(-1);
+            }
+
             mLastSearch = s.toString();
             if ("".equals(mLastSearch)) {
                 mIsSearching = false;
@@ -179,7 +194,11 @@ public class ArtistSearchFragment extends BaseFragment {
                 intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, artist.getName());
                 startActivity(intent);
             } else {
+                //TODO set selection state
                 mTopTracksFragment.setArtist(artist.getId());
+                if (mTopTracksFragment.getView() != null) {
+                    mTopTracksFragment.getView().setVisibility(View.VISIBLE);
+                }
             }
         }
     }

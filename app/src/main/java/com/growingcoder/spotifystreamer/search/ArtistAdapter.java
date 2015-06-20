@@ -14,6 +14,7 @@ import com.squareup.picasso.Picasso;
 
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,6 +30,9 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     private List<SpotifyArtist> mArtists;
     private OnRecyclerItemClickListener mItemClickListener = null;
     private ArtistComparator mArtistComparator = new ArtistComparator();
+
+    private boolean mIsSelectable;
+    private int mSelectedPosition = -1;
 
     public ArtistAdapter() {
         mArtists = new ArrayList<SpotifyArtist>();
@@ -51,6 +55,18 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         setArtists(artists);
     }
 
+    public void setSelectable(boolean selectable) {
+        mIsSelectable = selectable;
+    }
+
+    public int getSelectedPosition() {
+        return mSelectedPosition;
+    }
+
+    public void setSelectedPosition(int position) {
+        mSelectedPosition = position;
+    }
+
     public void setItemClickListener(OnRecyclerItemClickListener listener) {
         mItemClickListener = listener;
     }
@@ -58,7 +74,7 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     @Override
     public ArtistAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_item_artist, parent, false);
-        ViewHolder vh = new ViewHolder(v, mItemClickListener);
+        ViewHolder vh = new ViewHolder(v, mItemClickListener, mIsSelectable, new WeakReference<ArtistAdapter>(this));
         return vh;
     }
 
@@ -69,6 +85,8 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+        holder.setSelected(mSelectedPosition == position);
+
         SpotifyArtist artist = mArtists.get(position);
         holder.mName.setText(artist.getName());
         Picasso.with(SpotifyStreamerApp.getApp())
@@ -80,21 +98,40 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView mName;
         public ImageView mThumbnail;
+        private View mView;
 
+        private WeakReference<ArtistAdapter> mAdapter;
         private OnRecyclerItemClickListener mListener;
+        private boolean mIsSelectable;
 
-        public ViewHolder(View v, OnRecyclerItemClickListener listener) {
+        public ViewHolder(View v, OnRecyclerItemClickListener listener, boolean isSelectable, WeakReference<ArtistAdapter> adapter) {
             super(v);
+            mView = v;
+            mAdapter = adapter;
+            mIsSelectable = isSelectable;
             mListener = listener;
             mName = (TextView) v.findViewById(R.id.layout_item_artist_textview_name);
             mThumbnail = (ImageView) v.findViewById(R.id.layout_item_artist_imageview_thumbnail);
             v.setOnClickListener(this);
         }
 
+        public void setSelected(boolean selected) {
+            mView.setBackgroundResource(selected ? R.color.cardHighlight : R.color.card);
+        }
+
         @Override
         public void onClick(View v) {
+            int position = getAdapterPosition();
+            if (mIsSelectable) {
+                ArtistAdapter adapter = mAdapter.get();
+                if (adapter != null) {
+                    adapter.setSelectedPosition(position);
+                    adapter.notifyDataSetChanged();
+                }
+            }
+
             if (mListener != null) {
-                mListener.onItemClick(v, getAdapterPosition());
+                mListener.onItemClick(v, position);
             }
         }
     }

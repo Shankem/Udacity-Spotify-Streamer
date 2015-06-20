@@ -43,6 +43,11 @@ public final class Util {
                 url = images.get(0).url;
             }
         }
+
+        // Picasso will crash if you provide a blank URL so we convert it to null
+        if (url != null && "".equals(url.trim())) {
+            url = null;
+        }
         return url;
     }
 

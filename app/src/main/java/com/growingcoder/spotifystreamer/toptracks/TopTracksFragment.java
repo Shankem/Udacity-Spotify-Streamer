@@ -117,6 +117,12 @@ public class TopTracksFragment extends BaseFragment {
         }
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //TODO save the list of data
+    }
+
     public void setArtist(String id) {
         mArtistId = id;
         List<JSONObject> tracks = Util.getCachedData(SpotifyTrack.class.getName() + "-" + mArtistId);

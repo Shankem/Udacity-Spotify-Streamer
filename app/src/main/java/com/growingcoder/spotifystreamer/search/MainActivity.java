@@ -55,6 +55,8 @@ public class MainActivity extends BaseActivity {
         }
 
         //TODO make player dialog fragment with autoplay toggle
+
+        //TODO media player service
     }
 
     @Override

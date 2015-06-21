@@ -25,12 +25,18 @@ public class SpotifyTrack extends SpotifyJSONObject{
     private static final String KEY_NAME = "name";
     private static final String KEY_ALBUM_NAME = "album_name";
     private static final String KEY_ID = "id";
+    private static final String KEY_PLAYER_IMAGE = "player_image";
+    private static final String KEY_PREVIEW = "preview";
 
     public SpotifyTrack(Track track) {
         List<Image> images = track.album.images;
         int thumbnailSize = SpotifyStreamerApp.getApp().getResources().getDimensionPixelSize(R.dimen.thumbnail_size);
-        String url = Util.getImageWithSize(images, thumbnailSize);
-        setThumbnailUrl(url);
+        int playerImageSize = SpotifyStreamerApp.getApp().getResources().getDimensionPixelSize(R.dimen.player_image_size);
+        String thumbnailUrl = Util.getImageWithSize(images, thumbnailSize);
+        String playerImageUrl = Util.getImageWithSize(images, playerImageSize);
+        setThumbnailUrl(thumbnailUrl);
+        setPlayerImageUrl(playerImageUrl);
+        setPreviewUrl(track.preview_url);
         setName(track.name);
         setAlbumName(track.album.name);
         setId(track.id);
@@ -39,6 +45,14 @@ public class SpotifyTrack extends SpotifyJSONObject{
     public SpotifyTrack(JSONObject track) {
         try {
             setThumbnailUrl(track.getString(KEY_THUMBNAIL));
+        } catch (JSONException e) {
+        }
+        try {
+            setPlayerImageUrl(track.getString(KEY_PLAYER_IMAGE));
+        } catch (JSONException e) {
+        }
+        try {
+            setPreviewUrl(track.getString(KEY_PREVIEW));
         } catch (JSONException e) {
         }
         try {
@@ -61,6 +75,22 @@ public class SpotifyTrack extends SpotifyJSONObject{
 
     public void setThumbnailUrl(String thumbnailUrl) {
         put(KEY_THUMBNAIL, thumbnailUrl);
+    }
+
+    public String getPlayerImageUrl() {
+        return getString(KEY_PLAYER_IMAGE);
+    }
+
+    public void setPlayerImageUrl(String playerImageUrl) {
+        put(KEY_PLAYER_IMAGE, playerImageUrl);
+    }
+
+    public String getPreviewUrl() {
+        return getString(KEY_PREVIEW);
+    }
+
+    public void setPreviewUrl(String previewUrl) {
+        put(KEY_PREVIEW, previewUrl);
     }
 
     public String getName() {

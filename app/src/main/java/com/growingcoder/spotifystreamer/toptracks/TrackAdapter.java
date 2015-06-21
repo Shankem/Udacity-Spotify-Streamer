@@ -39,6 +39,10 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.ViewHolder> 
         Collections.sort(mTracks, mTrackComparator);
     }
 
+    public List<SpotifyTrack> getTracks() {
+        return mTracks;
+    }
+
     public void setJSONTracks(List<JSONObject> jsonTracks) {
         List<SpotifyTrack> tracks = new ArrayList<SpotifyTrack>();
         for (JSONObject jsonTrack : jsonTracks) {

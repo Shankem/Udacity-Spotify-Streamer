@@ -1,5 +1,6 @@
 package com.growingcoder.spotifystreamer.toptracks;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.growingcoder.spotifystreamer.R;
 import com.growingcoder.spotifystreamer.core.BaseFragment;
@@ -16,6 +16,10 @@ import com.growingcoder.spotifystreamer.core.BusManager;
 import com.growingcoder.spotifystreamer.core.OnRecyclerItemClickListener;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.growingcoder.spotifystreamer.core.Util;
+import com.growingcoder.spotifystreamer.player.PlayerActivity;
+import com.growingcoder.spotifystreamer.player.PlayerFragment;
+import com.growingcoder.spotifystreamer.player.SpotifyPlayerService;
+import com.growingcoder.spotifystreamer.search.MainActivity;
 import com.squareup.otto.Subscribe;
 
 import org.json.JSONObject;
@@ -85,7 +89,18 @@ public class TopTracksFragment extends BaseFragment {
         mAdapter.setItemClickListener(new OnRecyclerItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {
-                Toast.makeText(SpotifyStreamerApp.getApp(), "Implement me in part 2!!", Toast.LENGTH_SHORT).show();
+                Util.cacheData(SpotifyPlayerService.KEY_PREFS_PLAYLIST, mAdapter.getTracks());
+                Bundle extras = new Bundle();
+                extras.putInt(PlayerFragment.KEY_BUNDLE_PLAYLIST_POSITION, position);
+                if (getActivity() instanceof MainActivity) {
+                    PlayerFragment player = new PlayerFragment();
+                    player.setArguments(extras);
+                    player.show(getFragmentManager(), PlayerFragment.class.getName());
+                } else {
+                    Intent intent = new Intent(getActivity(), PlayerActivity.class);
+                    intent.putExtras(extras);
+                    startActivity(intent);
+                }
             }
         });
     }

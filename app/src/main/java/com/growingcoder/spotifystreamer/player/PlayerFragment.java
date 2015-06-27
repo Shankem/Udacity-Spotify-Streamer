@@ -10,11 +10,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.growingcoder.spotifystreamer.R;
 import com.growingcoder.spotifystreamer.core.BusManager;
 import com.growingcoder.spotifystreamer.core.EventBridge;
+import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.growingcoder.spotifystreamer.core.Util;
+import com.growingcoder.spotifystreamer.toptracks.SpotifyTrack;
+import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
+import com.squareup.otto.Subscribe;
+import com.squareup.picasso.Picasso;
+
+import kaaes.spotify.webapi.android.models.Track;
 
 /**
  * Used to display a music player.
@@ -30,7 +39,15 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
     private boolean mAllowsUIChanges = false;
     private SpotifyPlayerService mPlayerService;
     private int mSongPosition = 0;
-    private boolean mIsServiceRunning = false;
+    private String mArtistName = "";
+
+    private TextView mCurrentTime;
+    private TextView mEndTime;
+    private TextView mAlbumName;
+    private TextView mArtistNameView;
+    private TextView mSongName;
+    private ImageView mAlbumArt;
+    private SeekBar mSeekBar;
 
     private ServiceConnection mPlayerServiceConnection = new ServiceConnection() {
         @Override
@@ -38,12 +55,11 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
             mPlayerService = ((SpotifyPlayerService.SpotifyPlayerBinder)service).getService();
             mPlayerService.pauseCurrentSong();
             mPlayerService.setSongAtPosition(mSongPosition);
-            mIsServiceRunning = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mIsServiceRunning = false;
+            mPlayerService = null;
         }
     };
 
@@ -63,6 +79,17 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
         v.findViewById(R.id.fragment_player_play).setOnClickListener(controlClickListener);
         v.findViewById(R.id.fragment_player_next).setOnClickListener(controlClickListener);
         v.findViewById(R.id.fragment_player_previous).setOnClickListener(controlClickListener);
+
+        mCurrentTime = (TextView) v.findViewById(R.id.fragment_player_textview_current_time);
+        mEndTime = (TextView) v.findViewById(R.id.fragment_player_textview_end_time);
+        mAlbumName = (TextView) v.findViewById(R.id.fragment_player_textview_album);
+        mArtistNameView = (TextView) v.findViewById(R.id.fragment_player_textview_artist);
+        mSongName = (TextView) v.findViewById(R.id.fragment_player_textview_song);
+        mAlbumArt = (ImageView) v.findViewById(R.id.fragment_player_imageview_album);
+        mSeekBar = (SeekBar) v.findViewById(R.id.fragment_player_seekbar);
+
+
+        //TODO set the current time text (and end time)
 
         return v;
     }
@@ -85,15 +112,41 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        SpotifyStreamerApp.getApp().unbindService(mPlayerServiceConnection);
+    }
+
+    @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         Bundle args = getArguments();
         if (args != null) {
             mSongPosition = args.getInt(KEY_BUNDLE_PLAYLIST_POSITION);
+            mArtistName = args.getString(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME);
         }
-        Util.startPlayerService(getActivity(), mPlayerServiceConnection);
-        //TODO stop the service entirely. we should be paused and need to start the service from play button.
+        Util.startPlayerService(mPlayerServiceConnection);
+
+        //TODO handle rotation mid-song?
+    }
+
+    private void setupTrack() {
+        if (mPlayerService != null) {
+            SpotifyTrack track = mPlayerService.getCurrentTrack();Track t;
+            Picasso.with(SpotifyStreamerApp.getApp())
+                    .load(track.getPlayerImageUrl())
+                    .placeholder(android.R.drawable.ic_menu_gallery)
+                    .into(mAlbumArt);
+            mAlbumName.setText(track.getAlbumName());
+            mSongName.setText(track.getName());
+            mArtistNameView.setText(mArtistName);
+        }
+    }
+
+    @Subscribe
+    public void songChanged(BusManager.SongChangedEvent event) {
+        setupTrack();
     }
 
     @Override

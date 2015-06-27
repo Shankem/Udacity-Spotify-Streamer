@@ -194,7 +194,7 @@ public class ArtistSearchFragment extends BaseFragment {
                 intent.putExtra(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, artist.getName());
                 startActivity(intent);
             } else {
-                mTopTracksFragment.setArtist(artist.getId());
+                mTopTracksFragment.setArtist(artist.getId(), artist.getName());
                 if (mTopTracksFragment.getView() != null) {
                     mTopTracksFragment.getView().setVisibility(View.VISIBLE);
                 }

@@ -1,6 +1,5 @@
 package com.growingcoder.spotifystreamer.core;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -95,9 +94,9 @@ public final class Util {
     /**
      * Starts the service which will begin playing the current playlist in order.
      */
-    public static void startPlayerService(Activity activity, ServiceConnection connection) {
+    public static void startPlayerService(ServiceConnection connection) {
         Intent playerIntent = new Intent(SpotifyStreamerApp.getApp(), SpotifyPlayerService.class);
-        activity.bindService(playerIntent, connection, Context.BIND_AUTO_CREATE);
+        SpotifyStreamerApp.getApp().bindService(playerIntent, connection, Context.BIND_AUTO_CREATE);
         SpotifyStreamerApp.getApp().startService(playerIntent);
     }
 }

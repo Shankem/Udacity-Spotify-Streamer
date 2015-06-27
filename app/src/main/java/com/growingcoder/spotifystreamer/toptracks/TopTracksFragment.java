@@ -60,6 +60,7 @@ public class TopTracksFragment extends BaseFragment {
     private View mEmptyTextView;
 
     private String mArtistId;
+    private String mArtistName;
 
     private Callback<Tracks> mTracksCallback = new Callback<Tracks>() {
         @Override
@@ -92,6 +93,7 @@ public class TopTracksFragment extends BaseFragment {
                 Util.cacheData(SpotifyPlayerService.KEY_PREFS_PLAYLIST, mAdapter.getTracks());
                 Bundle extras = new Bundle();
                 extras.putInt(PlayerFragment.KEY_BUNDLE_PLAYLIST_POSITION, position);
+                extras.putString(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, mArtistName);
                 if (getActivity() instanceof MainActivity) {
                     PlayerFragment player = new PlayerFragment();
                     player.setArguments(extras);
@@ -129,12 +131,13 @@ public class TopTracksFragment extends BaseFragment {
 
         Bundle args = getArguments();
         if (args != null) {
-            setArtist(args.getString(KEY_BUNDLE_ARTIST_ID));
+            setArtist(args.getString(KEY_BUNDLE_ARTIST_ID), args.getString(KEY_BUNDLE_ARTIST_NAME));
         }
     }
 
-    public void setArtist(String id) {
+    public void setArtist(String id, String name) {
         mArtistId = id;
+        mArtistName = name;
         List<JSONObject> tracks = Util.getCachedData(SpotifyTrack.class.getName() + "-" + mArtistId);
 
         if (tracks == null) {

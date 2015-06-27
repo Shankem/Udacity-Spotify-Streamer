@@ -21,6 +21,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".toptracks.TopTracksActivity"/>
+        <activity android:name=".player.PlayerActivity"/>
+
+        <service
+            android:name=".player.SpotifyPlayerService"
+            android:exported="false"/>
     </application>
 
 </manifest>

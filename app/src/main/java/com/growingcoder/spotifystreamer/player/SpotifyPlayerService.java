@@ -11,6 +11,8 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
+import com.growingcoder.spotifystreamer.core.BusManager;
+import com.growingcoder.spotifystreamer.core.EventBridge;
 import com.growingcoder.spotifystreamer.core.Util;
 import com.growingcoder.spotifystreamer.toptracks.SpotifyTrack;
 
@@ -27,7 +29,7 @@ import java.util.List;
  * @since 6/21/2015.
  */
 public class SpotifyPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener,
-        MediaPlayer.OnErrorListener {
+        MediaPlayer.OnErrorListener, EventBridge.LifeCycleState {
 
     public static String KEY_PREFS_PLAYLIST = "PREFS_PLAYLIST";
 
@@ -37,10 +39,14 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     private WifiManager.WifiLock mWifiLock;
     private IBinder mBinder = new SpotifyPlayerBinder();
     private boolean mIsPlaying;
+    private boolean mAllowsUIChanges = false;
+    private EventBridge mEventBridge;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        mEventBridge = new EventBridge(this);
+        mAllowsUIChanges = true;
         mPlayListPosition = 0;
         mTracks = new ArrayList<SpotifyTrack>();
         for (JSONObject jsonTrack : Util.getCachedData(KEY_PREFS_PLAYLIST)) {
@@ -80,11 +86,12 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     public void onDestroy() {
         super.onDestroy();
         mWifiLock.release();
+        mAllowsUIChanges = false;
     }
 
     @Override
     public void onCompletion(MediaPlayer player) {
-        //TODO
+        playNextSong();
     }
 
     @Override
@@ -118,24 +125,28 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     private void playCurrentSong() {
         mPlayer.reset();
         try {
+            //TODO check if song is playable
             //TODO test with bad URL
             mPlayer.setDataSource(mTracks.get(mPlayListPosition).getPreviewUrl());
         } catch (IOException e) {
             Log.e(getClass().getName(), "Error occurred setting next song.", e);
         }
         mPlayer.prepareAsync();
+        mEventBridge.post(new BusManager.SongChangedEvent());
     }
 
     public void resumeCurrentSong() {
-        mPlayer.start();
-        mIsPlaying = true;
-        //TODO
+        if (!mIsPlaying) {
+            mPlayer.start();
+            mIsPlaying = true;
+        }
     }
 
     public void pauseCurrentSong() {
-        mPlayer.pause();
-        mIsPlaying = false;
-        //TODO
+        if (mIsPlaying) {
+            mPlayer.pause();
+            mIsPlaying = false;
+        }
     }
 
     public void scrub() {
@@ -144,6 +155,15 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
 
     public boolean isPlaying() {
         return mIsPlaying;
+    }
+
+    public SpotifyTrack getCurrentTrack() {
+        return mTracks.get(mPlayListPosition);
+    }
+
+    @Override
+    public boolean allowsUIChanges() {
+        return mAllowsUIChanges;
     }
 
     public class SpotifyPlayerBinder extends Binder {

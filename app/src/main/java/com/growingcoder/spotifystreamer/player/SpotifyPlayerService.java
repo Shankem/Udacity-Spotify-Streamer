@@ -13,10 +13,7 @@ import android.util.Log;
 
 import com.growingcoder.spotifystreamer.core.BusManager;
 import com.growingcoder.spotifystreamer.core.EventBridge;
-import com.growingcoder.spotifystreamer.core.Util;
 import com.growingcoder.spotifystreamer.toptracks.SpotifyTrack;
-
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,7 +35,6 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     private MediaPlayer mPlayer;
     private WifiManager.WifiLock mWifiLock;
     private IBinder mBinder = new SpotifyPlayerBinder();
-    private boolean mIsPlaying;
     private boolean mAllowsUIChanges = false;
     private EventBridge mEventBridge;
 
@@ -49,9 +45,6 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         mAllowsUIChanges = true;
         mPlayListPosition = 0;
         mTracks = new ArrayList<SpotifyTrack>();
-        for (JSONObject jsonTrack : Util.getCachedData(KEY_PREFS_PLAYLIST)) {
-            mTracks.add(new SpotifyTrack(jsonTrack));
-        }
 
         setupPlayer();
     }
@@ -102,13 +95,21 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onPrepared(MediaPlayer player) {
-        if (mIsPlaying) {
+        if (!player.isPlaying()) {
             player.start();
+            mEventBridge.post(new BusManager.SongChangedEvent());
         }
+    }
+
+    public void setPlayList(List<SpotifyTrack> playList) {
+        mTracks = playList;
     }
 
     public void playPreviousSong() {
         mPlayListPosition = (mPlayListPosition - 1) % mTracks.size();
+        if (mPlayListPosition < 0) {
+            mPlayListPosition = mTracks.size() - 1;
+        }
         playCurrentSong();
     }
 
@@ -118,47 +119,57 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void setSongAtPosition(int position) {
-        mPlayListPosition = position;
+        mPlayListPosition = mTracks.size() > position ? position : 0;
         playCurrentSong();
     }
 
     private void playCurrentSong() {
         mPlayer.reset();
+        if (mTracks.size() == 0) {
+            return;
+        }
+
+        mEventBridge.post(new BusManager.SongLoadingEvent());
+
         try {
-            //TODO check if song is playable
             //TODO test with bad URL
             mPlayer.setDataSource(mTracks.get(mPlayListPosition).getPreviewUrl());
         } catch (IOException e) {
             Log.e(getClass().getName(), "Error occurred setting next song.", e);
         }
         mPlayer.prepareAsync();
-        mEventBridge.post(new BusManager.SongChangedEvent());
     }
 
     public void resumeCurrentSong() {
-        if (!mIsPlaying) {
+        if (!mPlayer.isPlaying()) {
             mPlayer.start();
-            mIsPlaying = true;
         }
     }
 
     public void pauseCurrentSong() {
-        if (mIsPlaying) {
+        if (mPlayer.isPlaying()) {
             mPlayer.pause();
-            mIsPlaying = false;
         }
     }
 
-    public void scrub() {
-        //TODO skip to a point in the song
+    public int getEndTime() {
+        return mPlayer.getDuration();
+    }
+
+    public int getCurrentTime() {
+        return mPlayer.getCurrentPosition();
+    }
+
+    public void seekTo(int ms) {
+        mPlayer.seekTo(ms);
     }
 
     public boolean isPlaying() {
-        return mIsPlaying;
+        return mPlayer.isPlaying();
     }
 
     public SpotifyTrack getCurrentTrack() {
-        return mTracks.get(mPlayListPosition);
+        return mTracks.size() == 0 ? null : mTracks.get(mPlayListPosition);
     }
 
     @Override

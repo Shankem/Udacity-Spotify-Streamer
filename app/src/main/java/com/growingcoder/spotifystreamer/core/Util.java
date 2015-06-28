@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import kaaes.spotify.webapi.android.models.Image;
 
@@ -25,6 +26,9 @@ import kaaes.spotify.webapi.android.models.Image;
  * @since 6/13/2015.
  */
 public final class Util {
+
+    private static final int SECONDS_PER_MINUTE = 60;
+
     private Util() {
 
     }
@@ -98,5 +102,16 @@ public final class Util {
         Intent playerIntent = new Intent(SpotifyStreamerApp.getApp(), SpotifyPlayerService.class);
         SpotifyStreamerApp.getApp().bindService(playerIntent, connection, Context.BIND_AUTO_CREATE);
         SpotifyStreamerApp.getApp().startService(playerIntent);
+    }
+
+    /**
+     * Given milliseconds, return a string with time formatted as mm:ss.
+     * Note: We could use a string formatter but it will be unnecessarily expensive.
+     */
+    public static String getFormattedTime(int ms) {
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(ms) % SECONDS_PER_MINUTE;
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(ms);
+        String leadingZero = (seconds < 10 ? "0" : "");
+        return minutes + ":" + leadingZero + seconds;
     }
 }

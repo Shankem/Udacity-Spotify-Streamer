@@ -37,6 +37,14 @@ public final class BusManager {
 
     }
 
+    public static class SongUpdatedEvent {
+
+    }
+
+    public static class SongLoadingEvent {
+
+    }
+
     /**
      * This extension is just to make sure we can post events from any thread.
      * This solution was found here: https://github.com/square/otto/issues/38

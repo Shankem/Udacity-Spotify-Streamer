@@ -3,6 +3,7 @@ package com.growingcoder.spotifystreamer.player;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -10,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -23,7 +25,10 @@ import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 
-import kaaes.spotify.webapi.android.models.Track;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Used to display a music player.
@@ -33,27 +38,49 @@ import kaaes.spotify.webapi.android.models.Track;
  */
 public class PlayerFragment extends DialogFragment implements EventBridge.LifeCycleState {
 
-    public static String KEY_BUNDLE_PLAYLIST_POSITION = "BUNDLE_PLAYLIST_POSITION";
+    public static final String KEY_BUNDLE_PLAYLIST_POSITION = "BUNDLE_PLAYLIST_POSITION";
+
+    private static final long TIME_UPDATE_DELAY = 200;
 
     private EventBridge mEventBridge;
     private boolean mAllowsUIChanges = false;
     private SpotifyPlayerService mPlayerService;
     private int mSongPosition = 0;
     private String mArtistName = "";
+    private Handler mTimeUpdateHandler;
 
+    private View mContainer;
     private TextView mCurrentTime;
     private TextView mEndTime;
     private TextView mAlbumName;
     private TextView mArtistNameView;
     private TextView mSongName;
     private ImageView mAlbumArt;
+    private ImageView mPlayButton;
     private SeekBar mSeekBar;
+    private ProgressBar mProgressBar;
+
+    private Runnable mUpdateTimeRunnable = new Runnable() {
+        public void run() {
+            postEvent(new BusManager.SongUpdatedEvent());
+            mTimeUpdateHandler.postDelayed(this, TIME_UPDATE_DELAY);
+        }
+    };
 
     private ServiceConnection mPlayerServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mPlayerService = ((SpotifyPlayerService.SpotifyPlayerBinder)service).getService();
+
+            //TODO if we're looking at an already playing song we'll have to flag it so we skip all of this
             mPlayerService.pauseCurrentSong();
+
+            List<SpotifyTrack> playlist = new ArrayList<SpotifyTrack>();
+            for (JSONObject jsonTrack : Util.getCachedData(SpotifyPlayerService.KEY_PREFS_PLAYLIST)) {
+                playlist.add(new SpotifyTrack(jsonTrack));
+            }
+
+            mPlayerService.setPlayList(playlist);
             mPlayerService.setSongAtPosition(mSongPosition);
         }
 
@@ -68,6 +95,7 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         mEventBridge = new EventBridge(this);
+        mTimeUpdateHandler = new Handler();
     }
 
     @Nullable
@@ -76,7 +104,8 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
         View v = inflater.inflate(R.layout.fragment_player, container, false);
 
         ControlClickListener controlClickListener = new ControlClickListener();
-        v.findViewById(R.id.fragment_player_play).setOnClickListener(controlClickListener);
+        mPlayButton = (ImageView) v.findViewById(R.id.fragment_player_play);
+        mPlayButton.setOnClickListener(controlClickListener);
         v.findViewById(R.id.fragment_player_next).setOnClickListener(controlClickListener);
         v.findViewById(R.id.fragment_player_previous).setOnClickListener(controlClickListener);
 
@@ -87,9 +116,10 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
         mSongName = (TextView) v.findViewById(R.id.fragment_player_textview_song);
         mAlbumArt = (ImageView) v.findViewById(R.id.fragment_player_imageview_album);
         mSeekBar = (SeekBar) v.findViewById(R.id.fragment_player_seekbar);
+        mProgressBar = (ProgressBar) v.findViewById(R.id.fragment_player_progressbar);
+        mContainer = v.findViewById(R.id.fragment_player_container);
 
-
-        //TODO set the current time text (and end time)
+        mSeekBar.setOnSeekBarChangeListener(new SeekListener());
 
         return v;
     }
@@ -100,8 +130,7 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
         mAllowsUIChanges = true;
         BusManager.getBus().register(this);
         mEventBridge.consumeEvents();
-
-        //TODO update track, may need to get the current track from the service
+        setupTrack();
     }
 
     @Override
@@ -109,6 +138,7 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
         super.onPause();
         mAllowsUIChanges = false;
         BusManager.getBus().unregister(this);
+        mTimeUpdateHandler.removeCallbacks(mUpdateTimeRunnable);
     }
 
     @Override
@@ -128,12 +158,13 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
         }
         Util.startPlayerService(mPlayerServiceConnection);
 
-        //TODO handle rotation mid-song?
+        //TODO handle rotation mid-song? (image is too big and it shouldn't restart)
+        //TODO handle tablet too
     }
 
     private void setupTrack() {
         if (mPlayerService != null) {
-            SpotifyTrack track = mPlayerService.getCurrentTrack();Track t;
+            SpotifyTrack track = mPlayerService.getCurrentTrack();
             Picasso.with(SpotifyStreamerApp.getApp())
                     .load(track.getPlayerImageUrl())
                     .placeholder(android.R.drawable.ic_menu_gallery)
@@ -141,12 +172,49 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
             mAlbumName.setText(track.getAlbumName());
             mSongName.setText(track.getName());
             mArtistNameView.setText(mArtistName);
+
+            if (mPlayerService.isPlaying()) {
+                mPlayButton.setImageResource(R.drawable.ic_pause_black);
+            } else {
+                mPlayButton.setImageResource(R.drawable.ic_play_arrow_black);
+            }
+
+
+            int endTime = mPlayerService.getEndTime();
+            mEndTime.setText(Util.getFormattedTime(endTime));
+            mSeekBar.setMax(endTime);
+
+            mTimeUpdateHandler.removeCallbacks(mUpdateTimeRunnable);
+            mTimeUpdateHandler.post(mUpdateTimeRunnable);
+
+            showLoading(false);
         }
+    }
+
+    private void updateTime() {
+        int time = mPlayerService.getCurrentTime();
+        mCurrentTime.setText(Util.getFormattedTime(time));
+        mSeekBar.setProgress(time);
+    }
+
+    private void showLoading(boolean loading) {
+        mContainer.setVisibility(loading ? View.GONE : View.VISIBLE);
+        mProgressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+    }
+
+    @Subscribe
+    public void songUpdated(BusManager.SongUpdatedEvent event) {
+        updateTime();
     }
 
     @Subscribe
     public void songChanged(BusManager.SongChangedEvent event) {
         setupTrack();
+    }
+
+    @Subscribe
+    public void songLoading(BusManager.SongLoadingEvent event) {
+        showLoading(true);
     }
 
     @Override
@@ -186,6 +254,25 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
                 }
 
             }
+        }
+    }
+
+    /**
+     * Listener to handle scrubbing/seeking through the song.
+     */
+    private class SeekListener implements SeekBar.OnSeekBarChangeListener {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (fromUser && mPlayerService != null) {
+                mPlayerService.seekTo(progress);
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+        }
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
         }
     }
 }

@@ -53,10 +53,6 @@ public class MainActivity extends BaseActivity {
                     TopTracksFragment.class.getName()).commit();
             artistFragment.setTopTracksFragment(topTracksFragment);
         }
-
-        //TODO make player dialog fragment with autoplay toggle
-
-        //TODO media player service
     }
 
     @Override

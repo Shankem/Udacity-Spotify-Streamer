@@ -14,9 +14,9 @@
     <dimen name="track_list_name_size">16sp</dimen>
     <dimen name="track_list_album_size">14sp</dimen>
 
-    <dimen name="player_min_size">312dp</dimen>
-    <dimen name="player_image_size">256dp</dimen>
-    <dimen name="player_button_size">80dp</dimen>
+    <dimen name="player_min_size">216dp</dimen>
+    <dimen name="player_image_size">116dp</dimen>
+    <dimen name="player_button_size">44dp</dimen>
     <dimen name="player_button_margin">16dp</dimen>
 
 </resources>

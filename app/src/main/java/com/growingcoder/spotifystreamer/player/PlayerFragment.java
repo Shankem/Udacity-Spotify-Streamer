@@ -1,15 +1,18 @@
 package com.growingcoder.spotifystreamer.player;
 
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -47,6 +50,7 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
     private SpotifyPlayerService mPlayerService;
     private int mSongPosition = 0;
     private String mArtistName = "";
+    private boolean mRestart = true;
     private Handler mTimeUpdateHandler;
 
     private View mContainer;
@@ -72,16 +76,19 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
         public void onServiceConnected(ComponentName name, IBinder service) {
             mPlayerService = ((SpotifyPlayerService.SpotifyPlayerBinder)service).getService();
 
-            //TODO if we're looking at an already playing song we'll have to flag it so we skip all of this
-            mPlayerService.pauseCurrentSong();
+            if (mRestart) {
+                mPlayerService.pauseCurrentSong();
 
-            List<SpotifyTrack> playlist = new ArrayList<SpotifyTrack>();
-            for (JSONObject jsonTrack : Util.getCachedData(SpotifyPlayerService.KEY_PREFS_PLAYLIST)) {
-                playlist.add(new SpotifyTrack(jsonTrack));
+                List<SpotifyTrack> playlist = new ArrayList<SpotifyTrack>();
+                for (JSONObject jsonTrack : Util.getCachedData(SpotifyPlayerService.KEY_PREFS_PLAYLIST)) {
+                    playlist.add(new SpotifyTrack(jsonTrack));
+                }
+
+                mPlayerService.setPlayList(playlist);
+                mPlayerService.setSongAtPosition(mSongPosition);
             }
 
-            mPlayerService.setPlayList(playlist);
-            mPlayerService.setSongAtPosition(mSongPosition);
+            mRestart = false;
         }
 
         @Override
@@ -89,6 +96,14 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
             mPlayerService = null;
         }
     };
+
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        return dialog;
+    }
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -157,9 +172,16 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
             mArtistName = args.getString(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME);
         }
         Util.startPlayerService(mPlayerServiceConnection);
+    }
 
-        //TODO handle rotation mid-song? (image is too big and it shouldn't restart)
-        //TODO handle tablet too
+    @Override
+    public void onDestroyView() {
+        // Fixes issue where dialog is unnecessarily dismissed on rotation
+        // See http://stackoverflow.com/questions/14657490/how-to-properly-retain-a-dialogfragment-through-rotation
+        if (getDialog() != null && getRetainInstance()) {
+            getDialog().setDismissMessage(null);
+        }
+        super.onDestroyView();
     }
 
     private void setupTrack() {

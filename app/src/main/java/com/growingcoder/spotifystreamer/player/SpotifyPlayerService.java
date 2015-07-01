@@ -135,13 +135,18 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         }
 
         mEventBridge.post(new BusManager.SongLoadingEvent());
-
-        try {
-            mPlayer.setDataSource(mTracks.get(mPlayListPosition).getPreviewUrl());
-        } catch (IOException e) {
-            Log.e(getClass().getName(), "Error occurred setting next song.", e);
+        String url = mTracks.get(mPlayListPosition).getPreviewUrl();
+        if (url == null) {
+            onError(mPlayer, 0, 0);
+        } else {
+            try {
+                mPlayer.setDataSource(url);
+            } catch (IOException e) {
+                Log.e(getClass().getName(), "Error occurred setting next song.", e);
+            }
+            mPlayer.prepareAsync();
         }
-        mPlayer.prepareAsync();
+
     }
 
     public void resumeCurrentSong() {

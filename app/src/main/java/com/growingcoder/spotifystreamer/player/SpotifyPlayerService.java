@@ -10,9 +10,12 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.growingcoder.spotifystreamer.R;
 import com.growingcoder.spotifystreamer.core.BusManager;
 import com.growingcoder.spotifystreamer.core.EventBridge;
+import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.growingcoder.spotifystreamer.toptracks.SpotifyTrack;
 
 import java.io.IOException;
@@ -90,7 +93,9 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     @Override
     public boolean onError(MediaPlayer player, int what, int extra) {
         mPlayer.reset();
-        return false;
+        Toast.makeText(SpotifyStreamerApp.getApp(), R.string.song_load_error, Toast.LENGTH_SHORT).show();
+        mEventBridge.post(new BusManager.SongChangedEvent());
+        return true;
     }
 
     @Override
@@ -132,7 +137,6 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         mEventBridge.post(new BusManager.SongLoadingEvent());
 
         try {
-            //TODO test with bad URL
             mPlayer.setDataSource(mTracks.get(mPlayListPosition).getPreviewUrl());
         } catch (IOException e) {
             Log.e(getClass().getName(), "Error occurred setting next song.", e);

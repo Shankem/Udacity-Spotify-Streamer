@@ -5,4 +5,6 @@
     <string name="no_artists_found">No Artists Found</string>
     <string name="no_tracks_found">No Tracks Found</string>
     <string name="top_tracks_title">Top 10 Tracks</string>
+
+    <string name="song_load_error">Unable to load song, please try again later.</string>
 </resources>

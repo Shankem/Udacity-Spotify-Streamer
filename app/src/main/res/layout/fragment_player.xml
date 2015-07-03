@@ -30,12 +30,14 @@
             android:id="@+id/fragment_player_textview_artist"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             tools:text="Artist Name"/>
 
         <TextView
             android:id="@+id/fragment_player_textview_album"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             tools:text="Album Name"/>
 
         <ImageView
@@ -48,6 +50,7 @@
             android:id="@+id/fragment_player_textview_song"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             tools:text="Song Name"/>
 
         <SeekBar

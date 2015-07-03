@@ -1,5 +1,6 @@
 package com.growingcoder.spotifystreamer.search;
 
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,7 @@ import java.util.List;
 
 /**
  * Used to display an artist in a recycler view.
+ *
  * @author Pierce
  * @since 6/7/2015.
  */
@@ -98,7 +100,7 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView mName;
         public ImageView mThumbnail;
-        private View mView;
+        private CardView mView;
 
         private WeakReference<ArtistAdapter> mAdapter;
         private OnRecyclerItemClickListener mListener;
@@ -106,7 +108,7 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
 
         public ViewHolder(View v, OnRecyclerItemClickListener listener, boolean isSelectable, WeakReference<ArtistAdapter> adapter) {
             super(v);
-            mView = v;
+            mView = (CardView) v;
             mAdapter = adapter;
             mIsSelectable = isSelectable;
             mListener = listener;
@@ -116,7 +118,8 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         }
 
         public void setSelected(boolean selected) {
-            mView.setBackgroundResource(selected ? R.color.cardHighlight : R.color.card);
+            int color = SpotifyStreamerApp.getApp().getResources().getColor(selected ? R.color.cardHighlight : R.color.card);
+            mView.setCardBackgroundColor(color);
         }
 
         @Override

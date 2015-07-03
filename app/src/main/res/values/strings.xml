@@ -7,4 +7,7 @@
     <string name="top_tracks_title">Top 10 Tracks</string>
 
     <string name="song_load_error">Unable to load song, please try again later.</string>
+
+    <string name="menu_country">Country</string>
+    <string name="country_dialog_title">Select Country</string>
 </resources>

@@ -93,7 +93,6 @@ public class TopTracksFragment extends BaseFragment {
                 Util.cacheData(SpotifyPlayerService.KEY_PREFS_PLAYLIST, mAdapter.getTracks());
                 Bundle extras = new Bundle();
                 extras.putInt(PlayerFragment.KEY_BUNDLE_PLAYLIST_POSITION, position);
-                extras.putString(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME, mArtistName);
                 if (getActivity() instanceof MainActivity) {
                     PlayerFragment player = new PlayerFragment();
                     player.setArguments(extras);

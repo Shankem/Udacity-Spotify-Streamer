@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import java.util.List;
 
+import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Track;
 
@@ -21,12 +22,15 @@ import kaaes.spotify.webapi.android.models.Track;
  */
 public class SpotifyTrack extends SpotifyJSONObject{
 
+    private static final String UNKNOWN_ARTIST = "Unknown Artist";
+
     private static final String KEY_THUMBNAIL = "thumbnail";
     private static final String KEY_NAME = "name";
     private static final String KEY_ALBUM_NAME = "album_name";
     private static final String KEY_ID = "id";
     private static final String KEY_PLAYER_IMAGE = "player_image";
     private static final String KEY_PREVIEW = "preview";
+    private static final String KEY_ARTIST_NAME = "artist_name";
 
     public SpotifyTrack(Track track) {
         List<Image> images = track.album.images;
@@ -39,7 +43,18 @@ public class SpotifyTrack extends SpotifyJSONObject{
         setPreviewUrl(track.preview_url);
         setName(track.name);
         setAlbumName(track.album.name);
+        setArtistName(getArtistName(track));
         setId(track.id);
+    }
+
+    private String getArtistName(Track track) {
+        List<ArtistSimple> artists = track.artists;
+        String artist = UNKNOWN_ARTIST;
+        if (artists != null && artists.size() > 0) {
+            artist = artists.get(0).name;
+        }
+
+        return artist;
     }
 
     public SpotifyTrack(JSONObject track) {
@@ -61,6 +76,10 @@ public class SpotifyTrack extends SpotifyJSONObject{
         }
         try {
             setAlbumName(track.getString(KEY_ALBUM_NAME));
+        } catch (JSONException e) {
+        }
+        try {
+            setArtistName(track.getString(KEY_ARTIST_NAME));
         } catch (JSONException e) {
         }
         try {
@@ -107,6 +126,14 @@ public class SpotifyTrack extends SpotifyJSONObject{
 
     public void setAlbumName(String albumName) {
         put(KEY_ALBUM_NAME, albumName);
+    }
+
+    public String getArtistName() {
+        return getString(KEY_ARTIST_NAME);
+    }
+
+    public void setArtistName(String artistName) {
+        put(KEY_ARTIST_NAME, artistName);
     }
 
     public String getId() {

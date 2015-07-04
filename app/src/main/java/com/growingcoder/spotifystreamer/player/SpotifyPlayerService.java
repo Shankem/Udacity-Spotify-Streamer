@@ -34,7 +34,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     public static String KEY_PREFS_PLAYLIST = "PREFS_PLAYLIST";
 
     private List<SpotifyTrack> mTracks;
-    private int mPlayListPosition = 0;
+    private int mPlayListPosition = -1;
     private MediaPlayer mPlayer;
     private WifiManager.WifiLock mWifiLock;
     private IBinder mBinder = new SpotifyPlayerBinder();
@@ -46,7 +46,6 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         super.onCreate();
         mEventBridge = new EventBridge(this);
         mAllowsUIChanges = true;
-        mPlayListPosition = 0;
         mTracks = new ArrayList<SpotifyTrack>();
 
         setupPlayer();
@@ -177,6 +176,13 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         return mPlayer.isPlaying();
     }
 
+    /**
+     * Check if the service was already started normally.
+     */
+    public boolean isOn() {
+        return mPlayListPosition != -1;
+    }
+
     public SpotifyTrack getCurrentTrack() {
         return mTracks.size() == 0 ? null : mTracks.get(mPlayListPosition);
     }
@@ -187,7 +193,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     }
 
     public class SpotifyPlayerBinder extends Binder {
-        SpotifyPlayerService getService() {
+        public SpotifyPlayerService getService() {
             return SpotifyPlayerService.this;
         }
     }

@@ -1,8 +1,12 @@
 package com.growingcoder.spotifystreamer.search;
 
+import android.content.ComponentName;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
@@ -11,9 +15,14 @@ import android.view.MenuItem;
 
 import com.growingcoder.spotifystreamer.R;
 import com.growingcoder.spotifystreamer.core.BaseActivity;
+import com.growingcoder.spotifystreamer.core.BusManager;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.growingcoder.spotifystreamer.core.Util;
+import com.growingcoder.spotifystreamer.player.PlayerActivity;
+import com.growingcoder.spotifystreamer.player.PlayerFragment;
+import com.growingcoder.spotifystreamer.player.SpotifyPlayerService;
 import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
+import com.squareup.otto.Subscribe;
 
 import java.util.Locale;
 
@@ -29,6 +38,28 @@ public class MainActivity extends BaseActivity {
     private static final String STATE_SUBTITLE = "STATE_SUBTITLE ";
 
     private Toolbar mToolbar;
+    private AlertDialog mDialog;
+    private boolean mIsTablet = false;
+    private MenuItem mNowPlayingMenu;
+    private SpotifyPlayerService mPlayerSerice;
+
+    private ServiceConnection mPlayerServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mPlayerSerice = ((SpotifyPlayerService.SpotifyPlayerBinder)service).getService();
+            if (mNowPlayingMenu != null) {
+                mNowPlayingMenu.setVisible(mPlayerSerice.isOn());
+            }
+            if (!mPlayerSerice.isOn()) {
+                mPlayerSerice.stopSelf();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mPlayerSerice = null;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +94,27 @@ public class MainActivity extends BaseActivity {
             getSupportFragmentManager().beginTransaction().add(R.id.main_fragment_detail_container, topTracksFragment,
                     TopTracksFragment.class.getName()).commit();
             artistFragment.setTopTracksFragment(topTracksFragment);
+            mIsTablet = true;
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mPlayerSerice != null && mNowPlayingMenu != null) {
+            mNowPlayingMenu.setVisible(mPlayerSerice.isOn());
+        }
+
+        if (mPlayerSerice == null) {
+            Util.startPlayerService(mPlayerServiceConnection);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mDialog != null) {
+            mDialog.dismiss();
         }
     }
 
@@ -81,6 +133,10 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
+
+        mNowPlayingMenu =  menu.findItem(R.id.now_playing);
+        mNowPlayingMenu.setVisible(mPlayerSerice != null && mPlayerSerice.isOn());
+
         return true;
     }
 
@@ -89,7 +145,9 @@ public class MainActivity extends BaseActivity {
         switch (item.getItemId()) {
             case R.id.country:
                 showCountryPicker();
-                //TODO show dialog, handle rotation?
+                return true;
+            case R.id.now_playing:
+                showNowPlaying();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -121,8 +179,25 @@ public class MainActivity extends BaseActivity {
                     }
                 });
 
-        AlertDialog countryDialog = builder.create();
-        countryDialog.show();
+        mDialog = builder.create();
+        mDialog.show();
+    }
+
+    private void showNowPlaying() {
+        if (mIsTablet) {
+            PlayerFragment player = new PlayerFragment();
+            player.show(getSupportFragmentManager(), PlayerFragment.class.getName());
+        } else {
+            Intent intent = new Intent(this, PlayerActivity.class);
+            startActivity(intent);
+        }
+    }
+
+    @Subscribe
+    public void songChanged(BusManager.SongChangedEvent event) {
+        if (mNowPlayingMenu != null) {
+            mNowPlayingMenu.setVisible(true);
+        }
     }
 }
 

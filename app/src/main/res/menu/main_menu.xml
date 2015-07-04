@@ -4,6 +4,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/now_playing"
+        android:icon="@drawable/now_playing"
+        android:title="@string/now_playing"
+        app:showAsAction="ifRoom"/>
+
+    <item
         android:id="@+id/country"
         android:icon="@drawable/country"
         android:title="@string/menu_country"

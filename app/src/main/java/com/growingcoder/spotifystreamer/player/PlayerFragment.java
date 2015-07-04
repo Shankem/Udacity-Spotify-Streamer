@@ -24,7 +24,6 @@ import com.growingcoder.spotifystreamer.core.EventBridge;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.growingcoder.spotifystreamer.core.Util;
 import com.growingcoder.spotifystreamer.toptracks.SpotifyTrack;
-import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 
@@ -49,7 +48,6 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
     private boolean mAllowsUIChanges = false;
     private SpotifyPlayerService mPlayerService;
     private int mSongPosition = 0;
-    private String mArtistName = "";
     private boolean mRestart = true;
     private Handler mTimeUpdateHandler;
 
@@ -86,6 +84,8 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
 
                 mPlayerService.setPlayList(playlist);
                 mPlayerService.setSongAtPosition(mSongPosition);
+            } else {
+                postEvent(new BusManager.SongChangedEvent());
             }
 
             mRestart = false;
@@ -169,7 +169,8 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
         Bundle args = getArguments();
         if (args != null) {
             mSongPosition = args.getInt(KEY_BUNDLE_PLAYLIST_POSITION);
-            mArtistName = args.getString(TopTracksFragment.KEY_BUNDLE_ARTIST_NAME);
+        } else {
+            mRestart = false;
         }
         Util.startPlayerService(mPlayerServiceConnection);
     }
@@ -193,7 +194,7 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
                     .into(mAlbumArt);
             mAlbumName.setText(track.getAlbumName());
             mSongName.setText(track.getName());
-            mArtistNameView.setText(mArtistName);
+            mArtistNameView.setText(track.getArtistName());
 
             if (mPlayerService.isPlaying()) {
                 mPlayButton.setImageResource(R.drawable.ic_pause_black);

@@ -8,6 +8,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.growingcoder.spotifystreamer.player.SpotifyPlayerService;
+import com.growingcoder.spotifystreamer.search.MainActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -113,5 +114,15 @@ public final class Util {
         long minutes = TimeUnit.MILLISECONDS.toMinutes(ms);
         String leadingZero = (seconds < 10 ? "0" : "");
         return minutes + ":" + leadingZero + seconds;
+    }
+
+    /**
+     * Get the country of the user or what they have selected it to be.
+     */
+    public static String getCurrentCountry() {
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
+        String currentCountry = SpotifyStreamerApp.getApp().getResources().getConfiguration().locale.getCountry();
+        currentCountry = preferences.getString(MainActivity.KEY_COUNTRY, currentCountry);
+        return currentCountry;
     }
 }

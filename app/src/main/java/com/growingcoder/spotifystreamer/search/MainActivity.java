@@ -1,7 +1,9 @@
 package com.growingcoder.spotifystreamer.search;
 
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -9,6 +11,8 @@ import android.view.MenuItem;
 
 import com.growingcoder.spotifystreamer.R;
 import com.growingcoder.spotifystreamer.core.BaseActivity;
+import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
+import com.growingcoder.spotifystreamer.core.Util;
 import com.growingcoder.spotifystreamer.toptracks.TopTracksFragment;
 
 import java.util.Locale;
@@ -21,6 +25,7 @@ import java.util.Locale;
  */
 public class MainActivity extends BaseActivity {
 
+    public static final String KEY_COUNTRY = "KEY_COUNTRY";
     private static final String STATE_SUBTITLE = "STATE_SUBTITLE ";
 
     private Toolbar mToolbar;
@@ -92,23 +97,26 @@ public class MainActivity extends BaseActivity {
     }
 
     private void showCountryPicker() {
+        String currentCountry = Util.getCurrentCountry();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.country_dialog_title);
 
-        final Locale[] locales = Locale.getAvailableLocales();
-        CharSequence[] countries = new CharSequence[locales.length];
+        final String[] countries = Locale.getISOCountries();
         int counter = 0;
-        for (Locale locale : locales) {
-            countries[counter] = locale.getDisplayCountry();
+        int selection = -1;
+        for (String country : countries) {
+            if (selection == - 1 && country.equals(currentCountry)) {
+                selection = counter;
+            }
             counter++;
         }
 
-        //TODO save and set checked item instead of -1
-
-        builder.setSingleChoiceItems(countries, -1,
+        builder.setSingleChoiceItems(countries, selection,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
-                        locales[item].getCountry();
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
+                        preferences.edit().putString(KEY_COUNTRY, countries[item]).apply();
                         dialog.dismiss();
                     }
                 });

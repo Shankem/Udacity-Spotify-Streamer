@@ -143,9 +143,9 @@ public class TopTracksFragment extends BaseFragment {
         if (tracks == null) {
             refreshState(true);
 
-            String locale = getResources().getConfiguration().locale.getCountry();
+            String country = Util.getCurrentCountry();
             Map<String, Object> queryMap = new HashMap<String, Object>();
-            queryMap.put(QUERY_KEY_COUNTRY, locale);
+            queryMap.put(QUERY_KEY_COUNTRY, country);
             mSpotifyService.getArtistTopTrack(mArtistId, queryMap, mTracksCallback);
         } else {
             mAdapter.setJSONTracks(tracks);

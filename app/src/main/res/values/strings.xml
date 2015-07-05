@@ -11,4 +11,8 @@
     <string name="menu_country">Country</string>
     <string name="country_dialog_title">Select Country Code</string>
     <string name="now_playing">Now Playing</string>
+    <string name="share_current_song">Share current song</string>
+
+    <string name="share_default_subject">Check out this song</string>
+    <string name="share_default_message">Listen to this %1$s</string>
 </resources>

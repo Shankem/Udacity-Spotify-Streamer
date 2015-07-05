@@ -8,7 +8,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,23 +43,31 @@ public class MainActivity extends BaseActivity {
     private AlertDialog mDialog;
     private boolean mIsTablet = false;
     private MenuItem mNowPlayingMenu;
-    private SpotifyPlayerService mPlayerSerice;
+    private MenuItem mShareMenu;
+    private SpotifyPlayerService mPlayerService;
+    private ShareActionProvider mShareActionProvider;
 
     private ServiceConnection mPlayerServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mPlayerSerice = ((SpotifyPlayerService.SpotifyPlayerBinder)service).getService();
+            mPlayerService = ((SpotifyPlayerService.SpotifyPlayerBinder)service).getService();
             if (mNowPlayingMenu != null) {
-                mNowPlayingMenu.setVisible(mPlayerSerice.isOn());
+                mNowPlayingMenu.setVisible(mPlayerService.isOn());
             }
-            if (!mPlayerSerice.isOn()) {
-                mPlayerSerice.stopSelf();
+            if (mShareMenu != null) {
+                mShareMenu.setVisible(mPlayerService.isOn());
+            }
+
+            if (!mPlayerService.isOn()) {
+                mPlayerService.stopSelf();
+            } else {
+                setupShareIntent();
             }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mPlayerSerice = null;
+            mPlayerService = null;
         }
     };
 
@@ -101,13 +111,21 @@ public class MainActivity extends BaseActivity {
     @Override
     public void onResume() {
         super.onResume();
-        if (mPlayerSerice != null && mNowPlayingMenu != null) {
-            mNowPlayingMenu.setVisible(mPlayerSerice.isOn());
+        if (mPlayerService != null) {
+            if (mNowPlayingMenu != null) {
+                mNowPlayingMenu.setVisible(mPlayerService.isOn());
+            }
+            if (mShareMenu != null) {
+                mShareMenu.setVisible(mPlayerService.isOn());
+            }
         }
 
-        if (mPlayerSerice == null) {
+        if (mPlayerService == null) {
             Util.startPlayerService(mPlayerServiceConnection);
+        } else {
+            setupShareIntent();
         }
+
     }
 
     @Override
@@ -135,7 +153,12 @@ public class MainActivity extends BaseActivity {
         getMenuInflater().inflate(R.menu.main_menu, menu);
 
         mNowPlayingMenu =  menu.findItem(R.id.now_playing);
-        mNowPlayingMenu.setVisible(mPlayerSerice != null && mPlayerSerice.isOn());
+        mNowPlayingMenu.setVisible(mPlayerService != null && mPlayerService.isOn());
+
+        mShareMenu =  menu.findItem(R.id.share_current_song);
+        mShareMenu.setVisible(mPlayerService != null && mPlayerService.isOn());
+
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(mShareMenu);
 
         return true;
     }
@@ -193,10 +216,28 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    private void setupShareIntent() {
+        if (mShareActionProvider != null && mPlayerService != null && mPlayerService.getCurrentTrack() != null) {
+            String url = mPlayerService.getCurrentTrack().getPreviewUrl();
+
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_default_subject));
+            shareIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_default_message, url));
+
+            mShareActionProvider.setShareIntent(shareIntent);
+        }
+    }
+
     @Subscribe
     public void songChanged(BusManager.SongChangedEvent event) {
-        if (mNowPlayingMenu != null) {
-            mNowPlayingMenu.setVisible(true);
+        mNowPlayingMenu.setVisible(true);
+        mShareMenu.setVisible(true);
+
+        if (mPlayerService == null) {
+            Util.startPlayerService(mPlayerServiceConnection);
+        } else {
+            setupShareIntent();
         }
     }
 }

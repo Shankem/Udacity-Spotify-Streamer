@@ -1,5 +1,8 @@
 package com.growingcoder.spotifystreamer.player;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +12,7 @@ import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -158,6 +162,34 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         if (mPlayer.isPlaying()) {
             mPlayer.pause();
         }
+    }
+
+    private Notification.Action generateAction( int icon, String title, String intentAction ) {
+        Intent intent = new Intent(getApplicationContext(), SpotifyPlayerService.class);
+        intent.setAction( intentAction );
+        PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
+        return new Notification.Action.Builder(icon, title, pendingIntent).build();
+    }
+
+    private void showNotification(Notification.Action action ) {
+        NotificationCompat.MediaStyle style = new NotificationCompat.MediaStyle();
+
+        Intent intent = new Intent( getApplicationContext(), SpotifyPlayerService.class );
+        intent.setAction( ACTION_STOP );
+        PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
+        Notification.Builder builder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle("Media Title")
+                .setContentText("Media Artist")
+                .setDeleteIntent(pendingIntent)
+                .setStyle(style);
+
+        builder.addAction( generateAction( android.R.drawable.ic_media_previous, "Previous", ACTION_PREVIOUS ) );
+        builder.addAction( action );
+        builder.addAction( generateAction( android.R.drawable.ic_media_next, "Next", ACTION_NEXT ) );
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService( Context.NOTIFICATION_SERVICE );
+        notificationManager.notify(1, builder.build());
     }
 
     public int getEndTime() {

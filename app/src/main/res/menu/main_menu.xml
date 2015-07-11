@@ -22,4 +22,9 @@
         android:icon="@drawable/country"
         android:title="@string/menu_country"
         app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/show_lockscreen"
+        android:title="@string/hide_notificaton_on_lockscreen"
+        app:showAsAction="never"/>
 </menu>

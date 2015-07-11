@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -15,6 +16,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
@@ -23,6 +25,7 @@ import com.growingcoder.spotifystreamer.R;
 import com.growingcoder.spotifystreamer.core.BusManager;
 import com.growingcoder.spotifystreamer.core.EventBridge;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
+import com.growingcoder.spotifystreamer.search.MainActivity;
 import com.growingcoder.spotifystreamer.toptracks.SpotifyTrack;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -123,8 +126,7 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
         super.onDestroy();
         mWifiLock.release();
         mAllowsUIChanges = false;
-        NotificationManager notificationManager = (NotificationManager) SpotifyStreamerApp.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(PLAYER_NOTIFICATION_ID);
+        removeNotification();
     }
 
     @Override
@@ -138,8 +140,7 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
         Toast.makeText(SpotifyStreamerApp.getApp(), R.string.song_load_error, Toast.LENGTH_SHORT).show();
         mEventBridge.post(new BusManager.SongChangedEvent());
 
-        NotificationManager notificationManager = (NotificationManager) SpotifyStreamerApp.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(PLAYER_NOTIFICATION_ID);
+        removeNotification();
         return true;
     }
 
@@ -149,7 +150,7 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
             mCurrentArt = null;
             player.start();
             mEventBridge.post(new BusManager.SongChangedEvent());
-            showNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
+            showNotification(generateAction(android.R.drawable.ic_media_pause, getString(R.string.pause), ACTION_PAUSE));
         }
     }
 
@@ -199,7 +200,7 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
     public void resumeCurrentSong() {
         if (!mPlayer.isPlaying()) {
             mPlayer.start();
-            showNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
+            showNotification(generateAction(android.R.drawable.ic_media_pause, getString(R.string.pause), ACTION_PAUSE));
         }
     }
 
@@ -212,15 +213,22 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
             mPlayer.pause();
 
             if (showNotification) {
-                showNotification(generateAction(android.R.drawable.ic_media_play, "Play", ACTION_PLAY));
+                showNotification(generateAction(android.R.drawable.ic_media_play, getString(R.string.play), ACTION_PLAY));
+            } else {
+                mLoadingArt = null;
+                mCurrentArt = null;
+                mLastAction = null;
             }
         }
     }
 
-    //TODO remove hard-coded titles
-
-    //TODO to hide and show on lockscreen
-    //TODO http://stackoverflow.com/questions/26932457/lollipop-notification-setvisibility-does-not-work
+    private void removeNotification() {
+        NotificationManager notificationManager = (NotificationManager) SpotifyStreamerApp.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(PLAYER_NOTIFICATION_ID);
+        mLastAction = null;
+        mCurrentArt = null;
+        mLoadingArt = null;
+    }
 
     private NotificationCompat.Action generateAction(int icon, String title, String intentAction) {
         Intent intent = new Intent(SpotifyStreamerApp.getApp(), SpotifyPlayerService.class);
@@ -240,8 +248,7 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
         SpotifyTrack track = getCurrentTrack();
 
         if (track == null) {
-            NotificationManager notificationManager = (NotificationManager) SpotifyStreamerApp.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.cancel(PLAYER_NOTIFICATION_ID);
+            removeNotification();
             return;
         }
 
@@ -255,15 +262,19 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
 
         Bitmap largeIcon = art != null ? art : BitmapFactory.decodeResource(getResources(), android.R.drawable.ic_menu_gallery);
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
+        boolean showOnLockScreen = preferences.getBoolean(MainActivity.KEY_SHOW_LOCKSCREEN, true);
+
         builder.setLargeIcon(largeIcon);
         builder.setDeleteIntent(pendingIntent);
         builder.setStyle(style);
         builder.setContentTitle(track.getName());
         builder.setContentText(track.getArtistName());
+        builder.setVisibility(showOnLockScreen ? NotificationCompat.VISIBILITY_PUBLIC : NotificationCompat.VISIBILITY_SECRET);
 
-        builder.addAction(generateAction(android.R.drawable.ic_media_previous, "Previous", ACTION_PREVIOUS));
+        builder.addAction(generateAction(android.R.drawable.ic_media_previous, getString(R.string.previous), ACTION_PREVIOUS));
         builder.addAction(action);
-        builder.addAction(generateAction(android.R.drawable.ic_media_next, "Next", ACTION_NEXT));
+        builder.addAction(generateAction(android.R.drawable.ic_media_next, getString(R.string.next), ACTION_NEXT));
 
         NotificationManager notificationManager = (NotificationManager) SpotifyStreamerApp.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(PLAYER_NOTIFICATION_ID, builder.build());
@@ -279,6 +290,12 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
                             .into(SpotifyPlayerService.this);
                 }
             });
+        }
+    }
+
+    public void refreshNotification() {
+        if (mLastAction != null) {
+            showNotification(mLastAction);
         }
     }
 

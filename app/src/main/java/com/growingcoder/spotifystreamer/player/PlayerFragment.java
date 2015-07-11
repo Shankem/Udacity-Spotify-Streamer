@@ -157,8 +157,8 @@ public class PlayerFragment extends DialogFragment implements EventBridge.LifeCy
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onDestroy() {
+        super.onDestroy();
         SpotifyStreamerApp.getApp().unbindService(mPlayerServiceConnection);
     }
 

@@ -15,4 +15,12 @@
 
     <string name="share_default_subject">Check out this song</string>
     <string name="share_default_message">Listen to this %1$s</string>
+
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="show_notificaton_on_lockscreen">Show notification on lock screen</string>
+    <string name="hide_notificaton_on_lockscreen">Hide notification on lock screen</string>
 </resources>

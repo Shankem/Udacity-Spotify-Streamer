@@ -1,16 +1,18 @@
 package com.growingcoder.spotifystreamer.player;
 
+import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v7.app.NotificationCompat;
@@ -23,9 +25,11 @@ import com.growingcoder.spotifystreamer.core.EventBridge;
 import com.growingcoder.spotifystreamer.core.SpotifyStreamerApp;
 import com.growingcoder.spotifystreamer.toptracks.SpotifyTrack;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -34,8 +38,8 @@ import java.util.List;
  * @author Pierce
  * @since 6/21/2015.
  */
-public class SpotifyPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener,
-        MediaPlayer.OnErrorListener, EventBridge.LifeCycleState {
+public class SpotifyPlayerService extends IntentService implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener,
+        MediaPlayer.OnErrorListener, EventBridge.LifeCycleState, Target {
 
     public static String KEY_PREFS_PLAYLIST = "PREFS_PLAYLIST";
 
@@ -54,6 +58,13 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     private IBinder mBinder = new SpotifyPlayerBinder();
     private boolean mAllowsUIChanges = false;
     private EventBridge mEventBridge;
+    private String mLoadingArt = null;
+    private NotificationCompat.Action mLastAction;
+    private Bitmap mCurrentArt = null;
+
+    public SpotifyPlayerService() {
+        super(SpotifyPlayerService.class.getName());
+    }
 
     @Override
     public void onCreate() {
@@ -63,25 +74,6 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         mTracks = new ArrayList<SpotifyTrack>();
 
         setupPlayer();
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        int result = super.onStartCommand(intent, flags, startId);
-        String action = intent.getAction();
-        if (ACTION_STOP.equals(action)) {
-            pauseCurrentSong(false);
-        } else if (ACTION_PAUSE.equals(action)) {
-            pauseCurrentSong();
-        } else if (ACTION_PLAY.equals(action)) {
-            resumeCurrentSong();
-        } else if (ACTION_NEXT.equals(action)) {
-            playNextSong();
-        } else if (ACTION_PREVIOUS.equals(action)) {
-            playPreviousSong();
-        }
-
-        return result;
     }
 
     /**
@@ -106,6 +98,22 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     }
 
     @Override
+    protected void onHandleIntent(Intent intent) {
+        String action = intent.getAction();
+        if (ACTION_STOP.equals(action)) {
+            pauseCurrentSong(false);
+        } else if (ACTION_PAUSE.equals(action)) {
+            pauseCurrentSong();
+        } else if (ACTION_PLAY.equals(action)) {
+            resumeCurrentSong();
+        } else if (ACTION_NEXT.equals(action)) {
+            playNextSong();
+        } else if (ACTION_PREVIOUS.equals(action)) {
+            playPreviousSong();
+        }
+    }
+
+    @Override
     public boolean onUnbind(Intent intent) {
         return true;
     }
@@ -115,8 +123,8 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         super.onDestroy();
         mWifiLock.release();
         mAllowsUIChanges = false;
-
-        //TODO dismiss the notification
+        NotificationManager notificationManager = (NotificationManager) SpotifyStreamerApp.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(PLAYER_NOTIFICATION_ID);
     }
 
     @Override
@@ -138,6 +146,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     @Override
     public void onPrepared(MediaPlayer player) {
         if (!player.isPlaying()) {
+            mCurrentArt = null;
             player.start();
             mEventBridge.post(new BusManager.SongChangedEvent());
             showNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
@@ -216,32 +225,41 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     private NotificationCompat.Action generateAction(int icon, String title, String intentAction) {
         Intent intent = new Intent(SpotifyStreamerApp.getApp(), SpotifyPlayerService.class);
         intent.setAction(intentAction);
-        PendingIntent pendingIntent = PendingIntent.getService(SpotifyStreamerApp.getApp(), 1, intent, 0);
+        int requestCode = (int) new Date().getTime();
+        PendingIntent pendingIntent = PendingIntent.getService(SpotifyStreamerApp.getApp(), requestCode, intent, 0);
         return new NotificationCompat.Action.Builder(icon, title, pendingIntent).build();
     }
 
-    private void showNotification(NotificationCompat.Action action) {
+    private void showNotification(final NotificationCompat.Action action) {
+        showNotification(action, mCurrentArt);
+    }
+
+    private void showNotification(NotificationCompat.Action action, Bitmap art) {
+        mCurrentArt = art;
+        mLastAction = action;
+        SpotifyTrack track = getCurrentTrack();
+
+        if (track == null) {
+            NotificationManager notificationManager = (NotificationManager) SpotifyStreamerApp.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(PLAYER_NOTIFICATION_ID);
+            return;
+        }
+
         NotificationCompat.MediaStyle style = new NotificationCompat.MediaStyle();
 
         Intent intent = new Intent(SpotifyStreamerApp.getApp(), SpotifyPlayerService.class);
         intent.setAction(ACTION_STOP);
-        PendingIntent pendingIntent = PendingIntent.getService(SpotifyStreamerApp.getApp(), 1, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getService(SpotifyStreamerApp.getApp(), 0, intent, 0);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(SpotifyStreamerApp.getApp());
         builder.setSmallIcon(R.mipmap.ic_launcher);
 
-        Bitmap largeIcon;
-
-        try {
-            largeIcon = Picasso.with(this).load(getCurrentTrack().getThumbnailUrl()).placeholder(android.R.drawable.ic_menu_gallery).get();
-        } catch (Exception e) {
-            largeIcon = BitmapFactory.decodeResource(getResources(), android.R.drawable.ic_menu_gallery);
-        }
+        Bitmap largeIcon = art != null ? art : BitmapFactory.decodeResource(getResources(), android.R.drawable.ic_menu_gallery);
 
         builder.setLargeIcon(largeIcon);
         builder.setDeleteIntent(pendingIntent);
         builder.setStyle(style);
-        builder.setContentTitle("Title here");
-        builder.setContentText("Context here");
+        builder.setContentTitle(track.getName());
+        builder.setContentText(track.getArtistName());
 
         builder.addAction(generateAction(android.R.drawable.ic_media_previous, "Previous", ACTION_PREVIOUS));
         builder.addAction(action);
@@ -249,6 +267,19 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
 
         NotificationManager notificationManager = (NotificationManager) SpotifyStreamerApp.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(PLAYER_NOTIFICATION_ID, builder.build());
+
+        if (art == null) {
+            mLoadingArt = track.getThumbnailUrl();
+            new Handler(getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    Picasso.with(SpotifyPlayerService.this)
+                            .load(mLoadingArt)
+                            .placeholder(android.R.drawable.ic_menu_gallery)
+                            .into(SpotifyPlayerService.this);
+                }
+            });
+        }
     }
 
     public int getEndTime() {
@@ -281,6 +312,20 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     @Override
     public boolean allowsUIChanges() {
         return mAllowsUIChanges;
+    }
+
+    @Override
+    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+        SpotifyTrack track = getCurrentTrack();
+        if (track != null && mLoadingArt != null && mLoadingArt.equals(track.getThumbnailUrl())) {
+            showNotification(mLastAction, bitmap);
+        }
+    }
+    @Override
+    public void onBitmapFailed(Drawable errorDrawable) {
+    }
+    @Override
+    public void onPrepareLoad(Drawable placeHolderDrawable) {
     }
 
     public class SpotifyPlayerBinder extends Binder {

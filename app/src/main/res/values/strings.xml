@@ -21,6 +21,6 @@
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
-    <string name="show_notificaton_on_lockscreen">Show notification on lock screen</string>
-    <string name="hide_notificaton_on_lockscreen">Hide notification on lock screen</string>
+    <string name="show_notificaton">Show notification</string>
+    <string name="hide_notificaton">Hide notification</string>
 </resources>

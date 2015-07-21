@@ -37,13 +37,13 @@ import java.util.Locale;
 public class MainActivity extends BaseActivity {
 
     public static final String KEY_COUNTRY = "KEY_COUNTRY";
-    public static final String KEY_SHOW_LOCKSCREEN = "KEY_SHOW_LOCKSCREEN";
+    public static final String KEY_SHOW_NOTIFICATION = "KEY_SHOW_NOTIFICATION";
     private static final String STATE_SUBTITLE = "STATE_SUBTITLE ";
 
     private Toolbar mToolbar;
     private AlertDialog mDialog;
     private boolean mIsTablet = false;
-    private MenuItem mShowOnLockScreenMenu;
+    private MenuItem mShowNotificationMenu;
     private MenuItem mNowPlayingMenu;
     private MenuItem mShareMenu;
     private SpotifyPlayerService mPlayerService;
@@ -160,8 +160,8 @@ public class MainActivity extends BaseActivity {
         mShareMenu =  menu.findItem(R.id.share_current_song);
         mShareMenu.setVisible(mPlayerService != null && mPlayerService.isOn());
 
-        mShowOnLockScreenMenu = menu.findItem(R.id.show_lockscreen);
-        updateShowLockScreenMenu();
+        mShowNotificationMenu = menu.findItem(R.id.show_lockscreen);
+        updateShowNotificationMenu();
 
         mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(mShareMenu);
 
@@ -178,7 +178,7 @@ public class MainActivity extends BaseActivity {
                 showNowPlaying();
                 return true;
             case R.id.show_lockscreen:
-                showOnLockScreen();
+                showNotification();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -214,24 +214,24 @@ public class MainActivity extends BaseActivity {
         mDialog.show();
     }
 
-    private void updateShowLockScreenMenu() {
+    private void updateShowNotificationMenu() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
-        boolean showOnLockScreen = preferences.getBoolean(KEY_SHOW_LOCKSCREEN, true);
-        if (showOnLockScreen) {
-            mShowOnLockScreenMenu.setTitle(R.string.hide_notificaton_on_lockscreen);
+        boolean showNotification = preferences.getBoolean(KEY_SHOW_NOTIFICATION, true);
+        if (showNotification) {
+            mShowNotificationMenu.setTitle(R.string.hide_notificaton);
         } else {
-            mShowOnLockScreenMenu.setTitle(R.string.show_notificaton_on_lockscreen);
+            mShowNotificationMenu.setTitle(R.string.show_notificaton);
         }
     }
 
-    private void showOnLockScreen() {
+    private void showNotification() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
-        boolean showOnLockScreen = preferences.getBoolean(KEY_SHOW_LOCKSCREEN, true);
-        preferences.edit().putBoolean(KEY_SHOW_LOCKSCREEN, !showOnLockScreen).apply();
-        if (showOnLockScreen) {
-            mShowOnLockScreenMenu.setTitle(R.string.show_notificaton_on_lockscreen);
+        boolean showNotification = preferences.getBoolean(KEY_SHOW_NOTIFICATION, true);
+        preferences.edit().putBoolean(KEY_SHOW_NOTIFICATION, !showNotification).apply();
+        if (showNotification) {
+            mShowNotificationMenu.setTitle(R.string.show_notificaton);
         } else {
-            mShowOnLockScreenMenu.setTitle(R.string.hide_notificaton_on_lockscreen);
+            mShowNotificationMenu.setTitle(R.string.hide_notificaton);
         }
 
         if (mPlayerService != null) {

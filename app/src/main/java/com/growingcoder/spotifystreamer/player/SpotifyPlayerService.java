@@ -243,6 +243,14 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
     }
 
     private void showNotification(NotificationCompat.Action action, Bitmap art) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
+        boolean enableNotifications = preferences.getBoolean(MainActivity.KEY_SHOW_NOTIFICATION, true);
+        if (!enableNotifications) {
+            NotificationManager notificationManager = (NotificationManager) SpotifyStreamerApp.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(PLAYER_NOTIFICATION_ID);
+            return;
+        }
+
         mCurrentArt = art;
         mLastAction = action;
         SpotifyTrack track = getCurrentTrack();
@@ -262,15 +270,11 @@ public class SpotifyPlayerService extends IntentService implements MediaPlayer.O
 
         Bitmap largeIcon = art != null ? art : BitmapFactory.decodeResource(getResources(), android.R.drawable.ic_menu_gallery);
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SpotifyStreamerApp.getApp());
-        boolean showOnLockScreen = preferences.getBoolean(MainActivity.KEY_SHOW_LOCKSCREEN, true);
-
         builder.setLargeIcon(largeIcon);
         builder.setDeleteIntent(pendingIntent);
         builder.setStyle(style);
         builder.setContentTitle(track.getName());
         builder.setContentText(track.getArtistName());
-        builder.setVisibility(showOnLockScreen ? NotificationCompat.VISIBILITY_PUBLIC : NotificationCompat.VISIBILITY_SECRET);
 
         builder.addAction(generateAction(android.R.drawable.ic_media_previous, getString(R.string.previous), ACTION_PREVIOUS));
         builder.addAction(action);
